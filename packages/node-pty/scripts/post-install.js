@@ -22,6 +22,17 @@ const BUILD_FILES = [
 const CONPTY_DIR = path.join(__dirname, '../third_party/conpty');
 const CONPTY_SUPPORTED_ARCH = ['x64', 'arm64'];
 
+// When the prebuilt platform package is in use, build/Release is not ours to
+// maintain and the conpty copy below is already part of that package.
+const PREBUILT_PACKAGE = `@manta-show/node-pty-${process.platform}-${process.arch}`;
+try {
+  require.resolve(`${PREBUILT_PACKAGE}/package.json`);
+  console.log(`\x1b[32m> Prebuilt bindings in use (${PREBUILT_PACKAGE}) — skipping build-folder maintenance\x1b[0m`);
+  process.exit(0);
+} catch (e) {
+  // fall through: source build
+}
+
 console.log('\x1b[32m> Cleaning release folder...\x1b[0m');
 
 function cleanFolderRecursive(folder) {

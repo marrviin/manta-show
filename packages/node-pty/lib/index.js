@@ -6,6 +6,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.native = exports.open = exports.createTerminal = exports.fork = exports.spawn = void 0;
+var nativeBinding_1 = require("./nativeBinding");
 var terminalCtor;
 if (process.platform === 'win32') {
     terminalCtor = require('./windowsTerminal').WindowsTerminal;
@@ -47,5 +48,5 @@ exports.open = open;
  * Expose the native API when not Windows, note that this is not public API and
  * could be removed at any time.
  */
-exports.native = (process.platform !== 'win32' ? require('../build/Release/pty.node') : null);
+exports.native = (process.platform !== 'win32' ? nativeBinding_1.loadNative('pty.node').module : null);
 //# sourceMappingURL=index.js.map
