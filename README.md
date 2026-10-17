@@ -48,11 +48,13 @@ Cursor（`~/.cursor/mcp.json`）：同样结构。
 
 ## 工具清单
 
+三类录制（网页 / 命令行 / Electron）默认统一输出 **1920×1080（16:9）**：等比缩放后居中补边（浏览器白底、终端深色底）。`*_record_stop` 传 `fit: 'native'` 可保持录制原始尺寸。
+
 ### 网页（Playwright Chromium，无头，默认 2x 高清）
 
 | 工具 | 说明 |
 |---|---|
-| `browser_open` | 打开网页，返回 sessionId（url, width=1280, height=800, deviceScaleFactor=2） |
+| `browser_open` | 打开网页，返回 sessionId（url, width=1440, height=810, deviceScaleFactor=2） |
 | `browser_navigate` | 会话内跳转 |
 | `browser_snapshot` | 可访问性树快照，用于确定选择器 |
 | `browser_click` / `browser_hover` | 按 CSS 选择器点击 / 悬停 |
@@ -69,7 +71,7 @@ Cursor（`~/.cursor/mcp.json`）：同样结构。
 
 | 工具 | 说明 |
 |---|---|
-| `terminal_open` | 启动命令并**自动开始录制**（command, args, cwd, cols=100, rows=30）；`decorate: 'terminal'`（默认）叠加终端窗口装饰（红绿灯 + 以命令为标题的标题栏），`'none'` 为原始画面 |
+| `terminal_open` | 启动命令并**自动开始录制**（command, args, cwd, cols=120, rows=30）；`decorate: 'terminal'`（默认）叠加终端窗口装饰（红绿灯 + 以命令为标题的标题栏），`'none'` 为原始画面 |
 | `terminal_read` | 读最近 N 行渲染后纯文本（去 ANSI），Agent 判断状态用 |
 | `terminal_send` / `terminal_send_key` | 输入文本 / 具名按键（enter、ctrl+c、上下左右……） |
 | `terminal_record_stop` | 导出 mp4 |

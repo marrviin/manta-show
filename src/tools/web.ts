@@ -58,8 +58,8 @@ export function registerWebTools(server: McpServer, store: SessionStore): void {
         '在无头 Chromium 中打开一个网页，返回 web 会话 id。后续用 browser_* 工具与之交互（缺省操作最近打开的会话）。',
       inputSchema: {
         url: z.string().url().describe('要打开的 URL'),
-        width: z.number().int().min(200).max(4096).optional().default(1280).describe('视口宽度'),
-        height: z.number().int().min(200).max(4096).optional().default(800).describe('视口高度'),
+        width: z.number().int().min(200).max(4096).optional().default(1440).describe('视口宽度'),
+        height: z.number().int().min(200).max(4096).optional().default(810).describe('视口高度'),
         deviceScaleFactor: z.number().min(1).max(3).optional().default(2).describe('设备像素比，2 输出高清 2x 图'),
       },
     },
@@ -97,7 +97,15 @@ export function registerWebTools(server: McpServer, store: SessionStore): void {
     handle(async ({ url, sessionId }) => {
       const session = store.get('web', sessionId) as WebSession;
       await session.page.goto(url, { waitUntil: 'load', timeout: 30_000 });
-      return textResult(`已跳转到 ${url}（标题：${await session.page.title()}）。`);
+      // 录制中导航时渲染进程可能因截图自愈短暂无响应，标题尽力而为，不阻塞返回
+      const title = await Promise.race([
+        session.page.title(),
+        new Promise<string>((r) => {
+          const t = setTimeout(() => r(''), 3_000);
+          t.unref?.();
+        }),
+      ]);
+      return textResult(`已跳转到 ${url}${title ? `（标题：${title}）` : ''}。`);
     }),
   );
 
@@ -321,18 +329,23 @@ export function registerWebTools(server: McpServer, store: SessionStore): void {
     'browser_record_stop',
     {
       title: '结束录制',
-      description: '停止录制并合成 mp4，返回文件路径、时长与 markdown 引用片段。',
+      description: '停止录制并合成 mp4（默认统一输出 1920×1080），返回文件路径、时长与 markdown 引用片段。',
       inputSchema: {
         path: z.string().optional().describe('输出 mp4 路径，缺省自动命名到 MANTA_SHOW_OUTPUT'),
+        fit: z
+          .enum(['canvas', 'native'])
+          .optional()
+          .default('canvas')
+          .describe('canvas=统一输出 1920×1080（默认）；native=保持录制原始尺寸'),
         sessionId: z.string().optional().describe('web 会话 id，缺省用最近的'),
       },
     },
-    handle(async ({ path, sessionId }) => {
+    handle(async ({ path, fit, sessionId }) => {
       const session = store.get('web', sessionId) as WebSession;
       const recorder = session.recorder;
       if (!recorder) return errorResult('该会话没有进行中的录制，请先调用 browser_record_start。');
       session.recorder = null;
-      const result = await recorder.stop(path ?? mediaPath('video', 'mp4'));
+      const result = await recorder.stop(path ?? mediaPath('video', 'mp4'), { fit });
       return videoFileResult(result.outputPath, result.durationSec, result.frameCount);
     }),
   );

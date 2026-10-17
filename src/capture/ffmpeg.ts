@@ -50,7 +50,7 @@ export async function locateFfmpeg(): Promise<string | null> {
   return null;
 }
 
-/** 运行一次 ffmpeg，失败时抛出带 stderr 摘要的错误 */
+/** 运行一次 ffmpeg（自动覆盖已有输出），失败时抛出带 stderr 摘要的错误 */
 export function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const bin = cachedPath;
@@ -58,7 +58,8 @@ export function runFfmpeg(args: string[]): Promise<void> {
       reject(new Error('ffmpeg 未定位，请先调用 locateFfmpeg'));
       return;
     }
-    const child = spawn(bin, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    // -y：输出文件已存在时直接覆盖，避免交互式确认卡死
+    const child = spawn(bin, ['-y', ...args], { stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '';
     child.stderr?.on('data', (d: Buffer) => {
       stderr += d.toString();

@@ -2,3 +2,5 @@ node_modules/
 dist/
 manta-media/
 *.log
+.scratch*
+.DS_Store

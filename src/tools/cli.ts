@@ -51,7 +51,7 @@ export function registerCliTools(server: McpServer, store: SessionStore): void {
         command: z.string().describe('要运行的命令，如 npm、python、./my-cli'),
         args: z.array(z.string()).optional().describe('命令参数列表'),
         cwd: z.string().optional().describe('工作目录，缺省为 MCP server 启动目录'),
-        cols: z.number().int().min(40).max(400).optional().default(100).describe('终端列数'),
+        cols: z.number().int().min(40).max(400).optional().default(120).describe('终端列数'),
         rows: z.number().int().min(10).max(120).optional().default(30).describe('终端行数'),
         decorate: z
           .enum(['terminal', 'none'])
@@ -171,18 +171,23 @@ export function registerCliTools(server: McpServer, store: SessionStore): void {
     'terminal_record_stop',
     {
       title: '导出终端录制',
-      description: '停止终端画面录制并合成 mp4，返回文件路径与 markdown 引用片段。',
+      description: '停止终端画面录制并合成 mp4（默认统一输出 1920×1080），返回文件路径与 markdown 引用片段。',
       inputSchema: {
         path: z.string().optional().describe('输出 mp4 路径，缺省自动命名到 MANTA_SHOW_OUTPUT'),
+        fit: z
+          .enum(['canvas', 'native'])
+          .optional()
+          .default('canvas')
+          .describe('canvas=统一输出 1920×1080（默认）；native=保持录制原始尺寸'),
         sessionId: z.string().optional().describe('cli 会话 id，缺省用最近的'),
       },
     },
-    handle(async ({ path, sessionId }) => {
+    handle(async ({ path, fit, sessionId }) => {
       const session = store.get('cli', sessionId) as CliSession;
       const recorder = session.recorder;
       if (!recorder) return errorResult('该会话没有进行中的录制。');
       session.recorder = null;
-      const result = await recorder.stop(path ?? mediaPath('terminal', 'mp4'));
+      const result = await recorder.stop(path ?? mediaPath('terminal', 'mp4'), { fit });
       return videoFileResult(result.outputPath, result.durationSec, result.frameCount);
     }),
   );

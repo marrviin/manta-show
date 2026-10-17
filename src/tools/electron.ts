@@ -258,18 +258,23 @@ export function registerElectronTools(server: McpServer, store: SessionStore): v
     'electron_record_stop',
     {
       title: '结束录制应用画面',
-      description: '停止录制并合成 mp4，返回文件路径与 markdown 引用片段。',
+      description: '停止录制并合成 mp4（默认统一输出 1920×1080），返回文件路径与 markdown 引用片段。',
       inputSchema: {
         path: z.string().optional().describe('输出 mp4 路径，缺省自动命名'),
+        fit: z
+          .enum(['canvas', 'native'])
+          .optional()
+          .default('canvas')
+          .describe('canvas=统一输出 1920×1080（默认）；native=保持录制原始尺寸'),
         sessionId: z.string().optional().describe('electron 会话 id，缺省用最近的'),
       },
     },
-    handle(async ({ path, sessionId }) => {
+    handle(async ({ path, fit, sessionId }) => {
       const session = store.get('electron', sessionId) as ElectronSession;
       const recorder = session.recorder;
       if (!recorder) return errorResult('该会话没有进行中的录制，请先调用 electron_record_start。');
       session.recorder = null;
-      const result = await recorder.stop(path ?? mediaPath('electron-video', 'mp4'));
+      const result = await recorder.stop(path ?? mediaPath('electron-video', 'mp4'), { fit });
       return videoFileResult(result.outputPath, result.durationSec, result.frameCount);
     }),
   );

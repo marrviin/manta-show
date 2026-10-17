@@ -117,10 +117,13 @@ export async function renderTerminalChrome(
 
   const windowW = even(cw + 2 * pad);
   const windowH = even(titleBarH + ch + 2 * pad);
-  const canvasW = even(windowW + 2 * margin);
-  const canvasH = even(windowH + 2 * margin);
-  const winX = margin;
-  const winY = margin;
+  // 画布取 16:9（与统一输出画布同比例，最终缩放无裁切无补边），窗口在壁纸上居中
+  const minW = windowW + 2 * margin;
+  const minH = windowH + 2 * margin;
+  const canvasW = even(Math.max(minW, Math.round((minH * 16) / 9)));
+  const canvasH = even(Math.max(minH, Math.round((canvasW * 9) / 16)));
+  const winX = Math.round((canvasW - windowW) / 2);
+  const winY = Math.round((canvasH - windowH) / 2);
   const contentX = winX + pad;
   const contentY = winY + titleBarH + pad;
 
@@ -190,10 +193,13 @@ export async function renderDesktopChrome(
 
   const windowW = even(cw);
   const windowH = even(ch);
-  const canvasW = even(cw + 2 * margin);
-  const canvasH = even(ch + 2 * margin);
-  const contentX = margin;
-  const contentY = margin;
+  // 画布取 16:9（与统一输出画布同比例，最终缩放无裁切无补边），窗口在壁纸上居中
+  const minW = cw + 2 * margin;
+  const minH = ch + 2 * margin;
+  const canvasW = even(Math.max(minW, Math.round((minH * 16) / 9)));
+  const canvasH = even(Math.max(minH, Math.round((canvasW * 9) / 16)));
+  const contentX = Math.round((canvasW - windowW) / 2);
+  const contentY = Math.round((canvasH - windowH) / 2);
 
   const svg = `<svg width="${canvasW}" height="${canvasH}" viewBox="0 0 ${canvasW} ${canvasH}" xmlns="http://www.w3.org/2000/svg">
   <defs>
