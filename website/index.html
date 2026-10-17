@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>manta-show — 为 AI Agent 定制的全场景产品媒体捕获 MCP Server</title>
+<meta name="description" content="manta-show 是一个 MCP Server,通过代码级控制为网页、Electron 桌面应用、CLI 工具自动生成高画质截图与 mp4 视频,用于快速补齐网站和 README 文档。" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <a class="logo" href="index.html"><span class="logo-mark">🪁</span>manta-show</a>
+    <div class="nav-links">
+      <a href="index.html#features" class="active">特性</a>
+      <a href="index.html#capabilities">能力</a>
+      <a href="docs.html">文档</a>
+    </div>
+    <a class="gh-btn" href="https://github.com/marrviin/manta-show">GitHub ↗</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <div class="badge-row">
+        <span class="badge"><b>MCP Server</b></span>
+        <span class="badge"><b>mp4 (H.264)</b> 统一输出</span>
+        <span class="badge">CI 友好</span>
+      </div>
+      <h1>让 AI Agent 自己<br><span class="grad">截屏、录屏、出图</span></h1>
+      <p class="sub">
+        manta-show 为 Cursor、Claude Code 等 AI Agent 定制:通过代码级控制,为
+        <b>网页、Electron 桌面应用、CLI 工具</b>自动生成高画质截图与视频,快速补齐网站和 README 文档。
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="docs.html">阅读文档</a>
+        <a class="btn btn-ghost" href="#capabilities">查看演示</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <span class="float-badge">由 <b>manta-show</b> 自己录制</span>
+      <div class="video-frame"><video src="media/manta-journal-demo.mp4" autoplay muted loop playsinline></video></div>
+      <div class="float-card">
+        <div class="fc-title"><span class="dot"></span>browser_record_stop</div>
+        <div class="fc-row"><span>输出</span><b>demo.mp4</b></div>
+        <div class="fc-row"><span>规格</span><b>1920×1080</b></div>
+        <div class="fc-row"><span>编码</span><b>H.264</b></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="container">
+    <div class="sec-head">
+      <div class="kicker">Why manta-show</div>
+      <h2>为零干扰、可自动化的媒体捕获而设计</h2>
+      <p>全部通过渲染层与 TTY 拦截采集,不需要人坐在电脑前,也不打扰正在运行的程序。</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="icon">🖥️</div>
+        <h3>零 OS 级录屏</h3>
+        <p>全部经 Chromium 渲染层采集:无屏幕录制权限、无窗口抖动,CI 里也能跑。</p>
+      </div>
+      <div class="feature">
+        <div class="icon">⌨️</div>
+        <h3>零侵入 CLI 捕获</h3>
+        <p>TTY 文本流拦截回放,不改动你的 CLI 一行代码,产出即用的高清 mp4。</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🎬</div>
+        <h3>统一媒体管线</h3>
+        <p>视频统一输出 mp4 (H.264),截图直接以 image content 返回,拿来即用。</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🤖</div>
+        <h3>面向 Agent 设计</h3>
+        <p>会话式细粒度工具、可恢复的错误提示,返回体自带可插入 README 的 markdown 片段。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="install-band">
+  <div class="container">
+    <div class="sec-head">
+      <div class="kicker">Install</div>
+      <h2>一条命令,装好即用</h2>
+      <p>自动检测本机已安装的 AI Agent(Claude Code、Cursor、Windsurf、Gemini CLI、Codex),把 manta-show 直接注册进它们的 MCP 配置。</p>
+    </div>
+    <div class="install-cmds">
+      <div class="install-cmd">
+        <span class="cmd-tag">安装</span>
+        <span class="prompt">$</span>
+        <code>npx @manta-show/mcp init</code>
+        <button class="copy-btn" data-copy="npx @manta-show/mcp init">复制</button>
+      </div>
+      <div class="install-cmd">
+        <span class="cmd-tag">体检</span>
+        <span class="prompt">$</span>
+        <code>npx @manta-show/mcp doctor</code>
+        <button class="copy-btn" data-copy="npx @manta-show/mcp doctor">复制</button>
+      </div>
+    </div>
+    <p class="install-note">
+      装完后对 Agent 说一句「用 manta-show 录个演示」即可。源码方式安装见<a href="docs.html#install">文档</a>。
+    </p>
+  </div>
+</section>
+
+<section id="capabilities" style="background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="sec-head">
+      <div class="kicker">Capabilities</div>
+      <h2>三条能力线,一套工具语法</h2>
+      <p>网页、命令行、桌面应用 —— 同样的「打开 → 交互 → 录制」节奏。以下演示均由 manta-show 自己录制。</p>
+    </div>
+    <div class="caps">
+      <div class="cap">
+        <div class="cap-info">
+          <span class="tag">browser_*</span>
+          <h3>网页</h3>
+          <p>无头浏览器高清渲染,Agent 按可访问性快照自主定位元素、点击、输入、录屏。</p>
+          <ul>
+            <li>元素级与整页截图</li>
+            <li>录制中继续交互</li>
+            <li>可叠加 macOS 浏览器窗框</li>
+          </ul>
+        </div>
+        <div>
+          <div class="video-frame"><video src="media/manta-journal-demo.mp4" autoplay muted loop playsinline controls></video></div>
+          <div class="video-caption">网页交互录制</div>
+        </div>
+      </div>
+
+      <div class="cap">
+        <div>
+          <div class="video-frame"><video src="media/cli-demo.mp4" autoplay muted loop playsinline controls></video></div>
+          <div class="video-caption">终端命令录制</div>
+        </div>
+        <div class="cap-info">
+          <span class="tag">terminal_*</span>
+          <h3>命令行</h3>
+          <p>在 pty 中启动任意命令,Agent 读输出、程序化按键交互,对被录程序零侵入。</p>
+          <ul>
+            <li>读渲染后文本判断运行状态</li>
+            <li>程序化输入与按键</li>
+            <li>可叠加终端窗口装饰</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="cap">
+        <div class="cap-info">
+          <span class="tag">electron_*</span>
+          <h3>Electron 桌面应用</h3>
+          <p>启动应用捕获主窗口,界面快照驱动交互,窗口与元素级截图。</p>
+          <ul>
+            <li>窗口 / 元素级截图</li>
+            <li>可叠加 macOS 桌面壁纸装饰</li>
+            <li>保持原始尺寸输出可选</li>
+          </ul>
+        </div>
+        <div>
+          <div class="video-frame"><video src="media/doctor-demo-typed.mp4" autoplay muted loop playsinline controls></video></div>
+          <div class="video-caption">Electron 应用录制</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <div class="container">
+    <div class="sec-head">
+      <div class="kicker">Workflow</div>
+      <h2>Agent 的一条典型工作流</h2>
+    </div>
+    <div class="flow-grid">
+      <div class="step"><div class="num"></div><h4>打开目标</h4><p>网页 / 终端 / Electron 应用,获得会话。</p></div>
+      <div class="step"><div class="num"></div><h4>定位界面</h4><p>可访问性快照确定元素与选择器。</p></div>
+      <div class="step"><div class="num"></div><h4>交互录制</h4><p>开始录制,执行点击 / 输入等演示动作。</p></div>
+      <div class="step"><div class="num"></div><h4>产出媒体</h4><p>拿到 mp4,返回体自带 markdown 引用片段。</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-band">
+  <h2>几分钟接入你的 Agent</h2>
+  <p>安装构建、注册 MCP Server、开口即用 —— 完整步骤与工具参考见文档。</p>
+  <a class="btn btn-primary" href="docs.html">前往文档</a>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      btn.textContent = '已复制 ✓';
+      btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1600);
+    });
+  });
+</script>
+
+<footer>
+  <div class="container">
+    <div class="foot-inner">
+      <span>🪁 <a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
+      <span><a href="index.html#features">特性</a> · <a href="index.html#capabilities">能力</a> · <a href="docs.html">文档</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>文档 — manta-show</title>
+<meta name="description" content="manta-show 安装、接入与工具参考文档。" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <a class="logo" href="index.html"><span class="logo-mark">🪁</span>manta-show</a>
+    <div class="nav-links">
+      <a href="index.html#features">特性</a>
+      <a href="index.html#capabilities">能力</a>
+      <a href="docs.html" class="active">文档</a>
+    </div>
+    <a class="gh-btn" href="https://github.com/marrviin/manta-show">GitHub ↗</a>
+  </div>
+</nav>
+
+<div class="container docs-layout">
+  <aside class="docs-sidebar">
+    <div class="side-title">开始</div>
+    <a href="#intro">简介</a>
+    <a href="#install">安装</a>
+    <a href="#mcp">接入 MCP 客户端</a>
+    <div class="side-title">工具参考</div>
+    <a href="#browser">网页捕获</a>
+    <a href="#terminal">终端捕获</a>
+    <a href="#electron">Electron 捕获</a>
+    <div class="side-title">进阶</div>
+    <a href="#video">视频输出规格</a>
+    <a href="#session">会话模型</a>
+    <a href="#dev">开发与测试</a>
+    <a href="#security">安全说明</a>
+  </aside>
+
+  <main class="doc-body">
+
+    <section class="doc-section" id="intro">
+      <h2>简介</h2>
+      <p>manta-show 是为 AI Agent(Cursor、Claude Code 等)定制的全场景产品媒体捕获 MCP Server。通过代码级控制,自动为<b>网页、Electron 桌面应用、CLI 工具</b>生成高画质截图与视频(mp4),用于快速补齐网站和 README 文档。</p>
+      <ul>
+        <li>零 OS 级录屏 —— 全部通过 Chromium 渲染层(Playwright / CDP)采集,无屏幕录制权限、无窗口抖动,CI 可跑</li>
+        <li>零侵入 CLI 捕获 —— node-pty 拦截 TTY 文本流,在 xterm.js 回放页中渲染后录制,产出 mp4</li>
+        <li>统一媒体管线 —— 所有视频统一为 mp4 (H.264, yuv420p);截图直接以 MCP image content 返回</li>
+        <li>面向 Agent 设计 —— 会话式细粒度工具、可恢复的错误提示、返回体自带 markdown 引用片段</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="install">
+      <h2>安装</h2>
+      <p>要求:Node ≥ 20、pnpm。</p>
+      <div class="code-label">安装与构建</div>
+      <pre><span class="c"># postinstall 会自动执行 playwright install chromium</span>
+git clone &lt;this-repo&gt; &amp;&amp; cd manta-show
+pnpm install
+pnpm build</pre>
+      <div class="callout">
+        <b>node-pty 说明:</b>CLI 捕获依赖 node-pty(native 模块)。macOS 26 上 1.1.0 正式版有 <code>posix_spawnp failed</code> 兼容问题,本仓库固定使用 <code>1.1.0-beta34</code>。pnpm 安装时如提示构建脚本许可,确认 <code>allowBuilds</code> 中的 electron / node-pty / ffmpeg-static 为 true(见 <code>pnpm-workspace.yaml</code>)。
+      </div>
+      <h3>ffmpeg</h3>
+      <p>录制视频需要 ffmpeg,按以下顺序自动定位:</p>
+      <ul>
+        <li>环境变量 <code>MANTA_SHOW_FFMPEG</code> 指定的路径</li>
+        <li>PATH 上的 ffmpeg</li>
+        <li>依赖自带的 <code>ffmpeg-static</code> 全静态构建(默认可用,无需额外安装)</li>
+      </ul>
+      <div class="callout warn">
+        <b>注意:</b>Playwright 自带的 ffmpeg 是裁剪版(无 libx264),不能用于本项目。
+      </div>
+    </section>
+
+    <section class="doc-section" id="mcp">
+      <h2>接入 MCP 客户端</h2>
+      <p>Claude Code 在项目级 <code>.mcp.json</code> 或 <code>~/.claude.json</code> 中配置;Cursor 在 <code>~/.cursor/mcp.json</code> 中使用同样结构。</p>
+      <div class="callout">
+        <b>懒人方式:</b>运行 <code>npx @manta-show/mcp init</code>,自动检测已安装的 AI Agent(Claude Code、Cursor、Windsurf、Gemini CLI、Codex)并写入配置;遇到问题用 <code>npx @manta-show/mcp doctor</code> 体检修复。
+      </div>
+      <pre>{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"manta-show"</span>: {
+      <span class="k">"command"</span>: <span class="s">"node"</span>,
+      <span class="k">"args"</span>: [<span class="s">"/absolute/path/to/manta-show/packages/mcp/dist/index.js"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"MANTA_SHOW_OUTPUT"</span>: <span class="s">"/absolute/path/to/your-project/manta-media"</span>
+      }
+    }
+  }
+}</pre>
+      <h3>环境变量</h3>
+      <table>
+        <tr><th>变量</th><th>默认</th><th>说明</th></tr>
+        <tr><td>MANTA_SHOW_OUTPUT</td><td>./manta-media(相对 server 启动目录)</td><td>媒体输出目录,建议指向你的文档项目</td></tr>
+        <tr><td>MANTA_SHOW_FFMPEG</td><td>自动定位</td><td>指定 ffmpeg 可执行文件路径</td></tr>
+      </table>
+    </section>
+
+    <section class="doc-section" id="browser">
+      <h2>网页捕获</h2>
+      <p>基于 Playwright Chromium,无头运行,默认 2x 高清渲染(deviceScaleFactor=2,视口 1440×810)。</p>
+      <table>
+        <tr><th>工具</th><th>说明</th></tr>
+        <tr><td>browser_open</td><td>打开网页,返回 sessionId(url, width=1440, height=810, deviceScaleFactor=2)</td></tr>
+        <tr><td>browser_navigate</td><td>会话内跳转</td></tr>
+        <tr><td>browser_snapshot</td><td>可访问性树快照,用于确定选择器</td></tr>
+        <tr><td>browser_click / browser_hover</td><td>按 CSS 选择器点击 / 悬停</td></tr>
+        <tr><td>browser_type</td><td>输入文本(可选回车提交)</td></tr>
+        <tr><td>browser_press_key / browser_scroll</td><td>按键 / 滚动</td></tr>
+        <tr><td>browser_evaluate</td><td>在页面执行 JS 表达式</td></tr>
+        <tr><td>browser_screenshot</td><td>截图(<code>selector</code> 元素级裁剪,<code>fullPage</code> 整页),返回图片 + 路径</td></tr>
+        <tr><td>browser_record_start / browser_record_stop</td><td>录制期间继续交互,stop 产出 mp4;见下方装饰选项</td></tr>
+        <tr><td>browser_close</td><td>关闭会话</td></tr>
+      </table>
+      <h3>装饰选项</h3>
+      <p><code>browser_record_stop</code> 的 <code>decorate</code> 参数:</p>
+      <ul>
+        <li><code>'browser'</code>(默认)—— 叠加 macOS 浏览器窗框(红绿灯 + 真实 URL 地址栏 + 圆角投影)</li>
+        <li><code>'none'</code> —— 原始画面</li>
+      </ul>
+      <h3>典型流程</h3>
+      <pre>browser_open → browser_snapshot 找选择器
+→ browser_click / browser_type 交互
+→ browser_record_start → 演示动作 → browser_record_stop 拿 mp4
+→ 把返回体中的 markdown 引用片段插入 README</pre>
+    </section>
+
+    <section class="doc-section" id="terminal">
+      <h2>终端捕获</h2>
+      <p>基于 node-pty + xterm.js 回放页,对被录程序零侵入。</p>
+      <table>
+        <tr><th>工具</th><th>说明</th></tr>
+        <tr><td>terminal_open</td><td>启动命令并<b>自动开始录制</b>(command, args, cwd, cols=120, rows=30)</td></tr>
+        <tr><td>terminal_read</td><td>读最近 N 行渲染后纯文本(去 ANSI),Agent 判断状态用</td></tr>
+        <tr><td>terminal_send / terminal_send_key</td><td>输入文本 / 具名按键(enter、ctrl+c、上下左右……)</td></tr>
+        <tr><td>terminal_record_stop</td><td>导出 mp4</td></tr>
+        <tr><td>terminal_stop / terminal_close</td><td>结束进程 / 释放会话</td></tr>
+      </table>
+      <h3>装饰选项</h3>
+      <p><code>terminal_open</code> 的 <code>decorate</code> 参数:</p>
+      <ul>
+        <li><code>'terminal'</code>(默认)—— 叠加终端窗口装饰(红绿灯 + 以命令为标题的标题栏)</li>
+        <li><code>'none'</code> —— 原始画面</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="electron">
+      <h2>Electron 捕获</h2>
+      <p>基于 Playwright <code>_electron</code> API。</p>
+      <table>
+        <tr><th>工具</th><th>说明</th></tr>
+        <tr><td>electron_launch</td><td>启动应用并捕获主窗口(app 为应用目录或入口 js)</td></tr>
+        <tr><td>electron_snapshot</td><td>界面可访问性快照</td></tr>
+        <tr><td>electron_click / electron_type / electron_press_key</td><td>界面交互</td></tr>
+        <tr><td>electron_screenshot</td><td>窗口 / 元素截图</td></tr>
+        <tr><td>electron_record_start / electron_record_stop</td><td>录制 / 导出 mp4;见下方装饰选项</td></tr>
+        <tr><td>electron_close</td><td>关闭应用</td></tr>
+      </table>
+      <h3>装饰选项</h3>
+      <p><code>electron_record_stop</code> 的 <code>decorate</code> 参数:</p>
+      <ul>
+        <li><code>'desktop'</code>(默认)—— 叠加 macOS 桌面装饰:窗口带圆角投影放在桌面壁纸上(无标题栏)。壁纸取自 macOS 26 (Tahoe) 官方壁纸,为 Apple 版权图像,仅供内部演示使用</li>
+        <li><code>'none'</code> —— 原始画面</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="video">
+      <h2>视频输出规格</h2>
+      <p>三类录制默认统一输出 <b>1920×1080(16:9)</b>:等比缩放后居中补边(浏览器白底、终端深色底)。</p>
+      <ul>
+        <li>编码统一为 <code>mp4 (H.264, yuv420p)</code></li>
+        <li>录制中可以继续交互,stop 时一次性产出 mp4</li>
+        <li><code>*_record_stop</code> 传 <code>fit: 'native'</code> 可保持录制原始尺寸</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="session">
+      <h2>会话模型</h2>
+      <ul>
+        <li>所有交互工具接受可选 <code>sessionId</code></li>
+        <li>不填时操作<b>该类型最近活跃的会话</b>,Agent 通常不需要手动传</li>
+        <li>会话空闲 10 分钟自动回收</li>
+      </ul>
+    </section>
+
+    <section class="doc-section" id="dev">
+      <h2>开发与测试</h2>
+      <table>
+        <tr><th>命令</th><th>说明</th></tr>
+        <tr><td>pnpm dev</td><td>tsc --watch</td></tr>
+        <tr><td>pnpm test</td><td>构建 + e2e(InMemoryTransport 直连,覆盖三条线)</td></tr>
+        <tr><td>pnpm test:unify</td><td>统一输出规格的压力测试</td></tr>
+        <tr><td>pnpm start</td><td>stdio 方式启动 server</td></tr>
+      </table>
+      <p>e2e 会真实拉起 Chromium / pty /(若安装了 electron devDependency)Electron 应用,产物校验后输出到 <code>manta-media/</code>(可在测试环境变量中重定向)。</p>
+    </section>
+
+    <section class="doc-section" id="security">
+      <h2>安全说明</h2>
+      <div class="callout warn">
+        <code>browser_evaluate</code> 会在页面上下文执行任意 JS,<code>terminal_open</code> 会在本机启动任意进程 —— 这是本工具的设计用途(本机开发 / 文档场景),请在信任的项目中使用。
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="foot-inner">
+      <span>🪁 <a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
+      <span><a href="index.html">首页</a> · <a href="docs.html">文档</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // 侧边栏 scrollspy
+  const links = document.querySelectorAll('.docs-sidebar a');
+  const map = new Map();
+  links.forEach(a => {
+    const sec = document.querySelector(a.getAttribute('href'));
+    if (sec) map.set(sec, a);
+  });
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        map.get(e.target)?.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-15% 0px -70% 0px' });
+  map.forEach((_, sec) => observer.observe(sec));
+</script>
+
+</body>
+</html>
