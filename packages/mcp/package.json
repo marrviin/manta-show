@@ -1,6 +1,6 @@
 {
   "name": "@manta-show/mcp",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "MCP server for AI agents: capture high-quality screenshots and videos of web pages, Electron apps and CLI tools, ready for README/product docs.",
   "license": "MIT",
   "type": "module",

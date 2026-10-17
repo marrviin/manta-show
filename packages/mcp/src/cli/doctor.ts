@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import * as p from '@clack/prompts';
 import { chromium } from 'playwright';
-import { downloadBundledFfmpeg, locateFfmpeg, runFfmpeg } from '../capture/ffmpeg.js';
+import { downloadBundledFfmpeg, locateFfmpeg, managedBinDir, runFfmpeg } from '../capture/ffmpeg.js';
 import { getBrowser } from '../capture/browser.js';
 import { mediaPath, outputDir } from '../util/media.js';
 import { listAgentStatuses, runInit } from './init.js';
@@ -64,7 +64,7 @@ async function checkFfmpeg(): Promise<CheckReport> {
         ? 'PATH'
         : process.env.MANTA_SHOW_FFMPEG === bin
           ? 'MANTA_SHOW_FFMPEG'
-          : bin.startsWith(homedir())
+          : bin.startsWith(managedBinDir())
             ? '~/.manta-show/bin（doctor 下载）'
             : 'ffmpeg-static（依赖自带）';
     return { group: '环境依赖', name: 'ffmpeg', ok: true, summary };
