@@ -12,6 +12,7 @@ var path = require("path");
 var child_process_1 = require("child_process");
 var net_1 = require("net");
 var windowsConoutConnection_1 = require("./windowsConoutConnection");
+var nativeBinding_1 = require("./nativeBinding");
 var conptyNative;
 var winptyNative;
 /**
@@ -38,36 +39,12 @@ var WindowsPtyAgent = /** @class */ (function () {
         }
         if (this._useConpty) {
             if (!conptyNative) {
-                try {
-                    conptyNative = require('../build/Release/conpty.node');
-                }
-                catch (outerError) {
-                    try {
-                        conptyNative = require('../build/Debug/conpty.node');
-                    }
-                    catch (innerError) {
-                        console.error('innerError', innerError);
-                        // Re-throw the exception from the Release require if the Debug require fails as well
-                        throw outerError;
-                    }
-                }
+                conptyNative = nativeBinding_1.loadNative('conpty.node').module;
             }
         }
         else {
             if (!winptyNative) {
-                try {
-                    winptyNative = require('../build/Release/pty.node');
-                }
-                catch (outerError) {
-                    try {
-                        winptyNative = require('../build/Debug/pty.node');
-                    }
-                    catch (innerError) {
-                        console.error('innerError', innerError);
-                        // Re-throw the exception from the Release require if the Debug require fails as well
-                        throw outerError;
-                    }
-                }
+                winptyNative = nativeBinding_1.loadNative('pty.node').module;
             }
         }
         this._ptyNative = this._useConpty ? conptyNative : winptyNative;

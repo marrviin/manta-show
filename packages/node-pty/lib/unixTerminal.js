@@ -18,22 +18,13 @@ var path = require("path");
 var tty = require("tty");
 var terminal_1 = require("./terminal");
 var utils_1 = require("./utils");
+var nativeBinding_1 = require("./nativeBinding");
 var pty;
 var helperPath;
-try {
-    pty = require('../build/Release/pty.node');
-    helperPath = '../build/Release/spawn-helper';
-}
-catch (outerError) {
-    try {
-        pty = require('../build/Debug/pty.node');
-        helperPath = '../build/Debug/spawn-helper';
-    }
-    catch (innerError) {
-        console.error('innerError', innerError);
-        // Re-throw the exception from the Release require if the Debug require fails as well
-        throw outerError;
-    }
+{
+    var native = nativeBinding_1.loadNative('pty.node');
+    pty = native.module;
+    helperPath = path.join(native.dir, 'spawn-helper');
 }
 helperPath = path.resolve(__dirname, helperPath);
 helperPath = helperPath.replace('app.asar', 'app.asar.unpacked');

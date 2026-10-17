@@ -10,21 +10,14 @@ import { Terminal, DEFAULT_COLS, DEFAULT_ROWS } from './terminal';
 import { IProcessEnv, IPtyForkOptions, IPtyOpenOptions } from './interfaces';
 import { ArgvOrCommandLine } from './types';
 import { assign } from './utils';
+import { loadNative } from './nativeBinding';
 
 let pty: IUnixNative;
 let helperPath: string;
-try {
-  pty = require('../build/Release/pty.node');
-  helperPath = '../build/Release/spawn-helper';
-} catch (outerError) {
-  try {
-    pty = require('../build/Debug/pty.node');
-    helperPath = '../build/Debug/spawn-helper';
-  } catch (innerError) {
-    console.error('innerError', innerError);
-    // Re-throw the exception from the Release require if the Debug require fails as well
-    throw outerError;
-  }
+{
+  const native = loadNative('pty.node');
+  pty = native.module;
+  helperPath = path.join(native.dir, 'spawn-helper');
 }
 
 helperPath = path.resolve(__dirname, helperPath);

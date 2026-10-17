@@ -7,11 +7,7 @@
  */
 
 let getConsoleProcessList: any;
-try {
-  getConsoleProcessList = require('../build/Release/conpty_console_list.node').getConsoleProcessList;
-} catch (err) {
-  getConsoleProcessList = require('../build/Debug/conpty_console_list.node').getConsoleProcessList;
-}
+getConsoleProcessList = require('./native').loadNative('conpty_console_list.node').module.getConsoleProcessList;
 
 const shellPid = parseInt(process.argv[2], 10);
 const consoleProcessList = getConsoleProcessList(shellPid);
