@@ -72,4 +72,7 @@ const packageJson = {
   }
 };
 fs.writeFileSync(path.join(target, 'package.json'), JSON.stringify(packageJson, null, 2) + '\n');
+
+const { execSync } = require('child_process');
+execSync('npm pack --silent', { cwd: target, stdio: 'inherit' });
 console.log(`Assembled ${target}`);
