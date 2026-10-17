@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Manta Show Demo</title>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 0; background: #fafafa; }
+  header { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; padding: 48px 32px; }
+  h1 { margin: 0 0 8px; font-size: 32px; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px; }
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 24px; margin: 16px 0; }
+  button { background: #6366f1; color: #fff; border: 0; border-radius: 8px; padding: 10px 20px; font-size: 15px; cursor: pointer; }
+  .pulse { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #22c55e; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: .6; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Manta Show 示例页面</h1>
+  <p>用于端到端测试的本地 fixture</p>
+</header>
+<main>
+  <div class="card" id="card">
+    <h2>交互演示 <span class="pulse"></span></h2>
+    <p id="text">点击下面的按钮会发生一些事情。</p>
+    <button id="demo-btn" onclick="document.getElementById('text').textContent='按钮已被点击！'">点我</button>
+  </div>
+</main>
+</body>
+</html>

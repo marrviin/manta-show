@@ -1,0 +1,20 @@
+{
+  "name": "manta-show-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for manta-show: MCP server for AI agents to capture screenshots and videos of web pages, Electron apps and CLI tools.",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "node-gyp": "^13.1.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @manta-show/mcp dev",
+    "start": "pnpm --filter @manta-show/mcp start",
+    "test": "pnpm --filter @manta-show/mcp test",
+    "test:e2e": "pnpm --filter @manta-show/mcp test:e2e",
+    "test:unify": "pnpm --filter @manta-show/mcp test:unify"
+  }
+}

@@ -1,0 +1,16 @@
+packages:
+  - 'packages/*'
+
+# Only these dependencies are allowed to run install/postinstall build scripts
+allowBuilds:
+  electron: true
+  esbuild: true
+  ffmpeg-static: true
+  node-pty: true
+
+onlyBuiltDependencies:
+  - electron
+  - node-pty
+  - playwright
+  - esbuild
+  - ffmpeg-static
