@@ -11,7 +11,8 @@
 
 ```bash
 git clone <this-repo> && cd manta-show
-pnpm install      # postinstall 会自动执行 playwright install chromium
+pnpm install
+npx playwright install chromium   # 浏览器内核（也可之后运行 pnpm --filter @manta-show/mcp doctor 一键自检安装）
 pnpm build
 ```
 
@@ -29,7 +30,7 @@ manta-show/
 └── pnpm-workspace.yaml  # workspace 与构建脚本许可配置
 ```
 
-常用命令（在仓库根目录执行）：`pnpm build` / `pnpm dev` / `pnpm test` / `pnpm test:unify`，均转发到 `packages/mcp`。
+常用命令（在仓库根目录执行）：`pnpm build` / `pnpm dev` / `pnpm test` / `pnpm test:e2e` / `pnpm test:unify`，均转发到 `packages/mcp`。
 
 录制视频需要 ffmpeg，按以下顺序自动定位：`MANTA_SHOW_FFMPEG` → PATH 上的 ffmpeg → 依赖自带的 `ffmpeg-static` 全静态构建（默认可用，无需额外安装）。注意：playwright 自带的 ffmpeg 是裁剪版（无 libx264），不能用于本项目。
 
@@ -44,7 +45,7 @@ Claude Code（项目级 `.mcp.json` 或 `~/.claude.json`）：
       "command": "node",
       "args": ["/absolute/path/to/manta-show/packages/mcp/dist/index.js"],
       "env": {
-        "MANTA_SHOW_OUTPUT": "/absolute/path/to/your-project/manta-media"
+        "MANTA_SHOW_OUTPUT": "/absolute/path/to/your-output-dir"
       }
     }
   }
@@ -57,7 +58,7 @@ Cursor（`~/.cursor/mcp.json`）：同样结构。
 
 | 变量 | 默认 | 说明 |
 |---|---|---|
-| `MANTA_SHOW_OUTPUT` | `./manta-media`（相对 server 启动目录） | 媒体输出目录，建议指向你的文档项目 |
+| `MANTA_SHOW_OUTPUT` | `~/.manta-show`（用户目录下） | 媒体输出目录，需要产物进文档项目时指向它 |
 | `MANTA_SHOW_FFMPEG` | 自动定位 | 指定 ffmpeg 可执行文件路径 |
 
 ## 工具清单
@@ -109,12 +110,13 @@ Cursor（`~/.cursor/mcp.json`）：同样结构。
 ## 开发与测试
 
 ```bash
-pnpm dev      # tsc --watch
-pnpm test     # 构建 + e2e（InMemoryTransport 直连，覆盖三条线）
-pnpm start    # stdio 方式启动 server
+pnpm dev        # tsc --watch
+pnpm test       # 快速单测（node:test，不依赖浏览器）
+pnpm test:e2e   # 构建 + e2e（InMemoryTransport 直连，覆盖三条线）
+pnpm start      # stdio 方式启动 server
 ```
 
-e2e 会真实拉起 Chromium / pty / （若安装了 electron devDependency）Electron 应用，产物校验后输出到 `manta-media/`（可在测试环境变量中重定向）。
+e2e 会真实拉起 Chromium / pty / （若安装了 electron devDependency）Electron 应用，产物校验后输出到默认输出目录（可用测试环境变量重定向）。
 
 ## 安全说明
 
