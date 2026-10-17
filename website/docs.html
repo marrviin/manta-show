@@ -78,7 +78,7 @@ pnpm build</pre>
       <h2>接入 MCP 客户端</h2>
       <p>Claude Code 在项目级 <code>.mcp.json</code> 或 <code>~/.claude.json</code> 中配置;Cursor 在 <code>~/.cursor/mcp.json</code> 中使用同样结构。</p>
       <div class="callout">
-        <b>懒人方式:</b>运行 <code>npx @manta-show/mcp init</code>,自动检测已安装的 AI Agent(Claude Code、Cursor、Windsurf、Gemini CLI、Codex)并写入配置;遇到问题用 <code>npx @manta-show/mcp doctor</code> 体检修复。
+        <b>懒人方式:</b>运行 <code>npx @manta-show/mcp init</code>,自动检测已安装的 AI Agent(Claude Code、Cursor、Gemini CLI、Codex)并写入配置;遇到问题用 <code>npx @manta-show/mcp doctor</code> 体检修复。
       </div>
       <pre>{
   <span class="k">"mcpServers"</span>: {
@@ -86,7 +86,7 @@ pnpm build</pre>
       <span class="k">"command"</span>: <span class="s">"node"</span>,
       <span class="k">"args"</span>: [<span class="s">"/absolute/path/to/manta-show/packages/mcp/dist/index.js"</span>],
       <span class="k">"env"</span>: {
-        <span class="k">"MANTA_SHOW_OUTPUT"</span>: <span class="s">"/absolute/path/to/your-project/manta-media"</span>
+        <span class="k">"MANTA_SHOW_OUTPUT"</span>: <span class="s">"/absolute/path/to/your-output-dir"</span>
       }
     }
   }
@@ -94,7 +94,7 @@ pnpm build</pre>
       <h3>环境变量</h3>
       <table>
         <tr><th>变量</th><th>默认</th><th>说明</th></tr>
-        <tr><td>MANTA_SHOW_OUTPUT</td><td>./manta-media(相对 server 启动目录)</td><td>媒体输出目录,建议指向你的文档项目</td></tr>
+        <tr><td>MANTA_SHOW_OUTPUT</td><td>~/.manta-show(用户目录下)</td><td>媒体输出目录,需要产物进文档项目时指向它</td></tr>
         <tr><td>MANTA_SHOW_FFMPEG</td><td>自动定位</td><td>指定 ffmpeg 可执行文件路径</td></tr>
       </table>
     </section>
@@ -195,7 +195,7 @@ pnpm build</pre>
         <tr><td>pnpm test:unify</td><td>统一输出规格的压力测试</td></tr>
         <tr><td>pnpm start</td><td>stdio 方式启动 server</td></tr>
       </table>
-      <p>e2e 会真实拉起 Chromium / pty /(若安装了 electron devDependency)Electron 应用,产物校验后输出到 <code>manta-media/</code>(可在测试环境变量中重定向)。</p>
+      <p>e2e 会真实拉起 Chromium / pty /(若安装了 electron devDependency)Electron 应用,产物校验后输出到默认输出目录(可在测试环境变量中重定向)。</p>
     </section>
 
     <section class="doc-section" id="security">

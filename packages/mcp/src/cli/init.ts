@@ -124,19 +124,6 @@ function buildAgents(
       install: () => updateJsonMcp(path.join(home, '.cursor', 'mcp.json'), cmd),
     },
     {
-      name: 'Windsurf',
-      detect: () =>
-        existsSync(path.join(home, '.codeium', 'windsurf')) ||
-        which('windsurf'),
-      hasConfig: () =>
-        jsonHasMcp(path.join(home, '.codeium', 'windsurf', 'mcp_config.json')),
-      install: () =>
-        updateJsonMcp(
-          path.join(home, '.codeium', 'windsurf', 'mcp_config.json'),
-          cmd,
-        ),
-    },
-    {
       name: 'Gemini CLI',
       // Only trust executables on PATH: leftover directories like ~/.gemini don't mean it's still in use
       detect: () => which('gemini'),

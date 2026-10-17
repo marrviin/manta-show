@@ -1,10 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import { homedir } from 'node:os';
 import path from 'node:path';
 import * as p from '@clack/prompts';
 import { chromium } from 'playwright';
-import { locateFfmpeg } from '../capture/ffmpeg.js';
-import { outputDir } from '../util/media.js';
+import { locateFfmpeg, runFfmpeg } from '../capture/ffmpeg.js';
+import { getBrowser } from '../capture/browser.js';
+import { mediaPath, outputDir } from '../util/media.js';
 import { listAgentStatuses, runInit } from './init.js';
 import { printBanner } from './banner.js';
 
@@ -114,9 +116,11 @@ async function checkChromium(): Promise<CheckReport> {
 }
 
 function checkOutputDir(): CheckReport {
-  const dir = process.env.MANTA_SHOW_OUTPUT ?? './manta-media';
+  const dir = process.env.MANTA_SHOW_OUTPUT
+    ? outputDir()
+    : outputDir().replace(homedir(), '~'); // outputDir() also creates the directory as a side effect
   try {
-    fs.accessSync(outputDir(), fs.constants.W_OK); // outputDir() also creates the directory as a side effect
+    fs.accessSync(outputDir(), fs.constants.W_OK);
     return { group: '输出与接入', name: '输出目录', ok: true, summary: `${dir} 可写` };
   } catch (e) {
     return {
@@ -159,6 +163,69 @@ function checkMcp(): CheckReport {
   };
 }
 
+const DEEP_GROUP = '采集管线';
+
+/** End-to-end screenshot test: launch Chromium, render a built-in page, save to the real output dir */
+async function deepScreenshot(): Promise<CheckReport> {
+  const name = '截图管线';
+  const file = mediaPath('deep-check', 'png');
+  try {
+    const browser = await getBrowser();
+    const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
+    try {
+      await page.setContent(
+        '<body style="margin:0;display:grid;place-items:center;height:100vh;background:#111;color:#fff;font:600 40px sans-serif">manta-show</body>',
+      );
+      await page.screenshot({ path: file });
+    } finally {
+      await page.close();
+    }
+    if (!fs.existsSync(file) || fs.statSync(file).size === 0) {
+      return { group: DEEP_GROUP, name, ok: false, summary: '截图文件为空' };
+    }
+    return { group: DEEP_GROUP, name, ok: true, summary: 'Chromium 渲染 + 截图正常' };
+  } catch (e) {
+    return {
+      group: DEEP_GROUP,
+      name,
+      ok: false,
+      summary: e instanceof Error ? e.message : String(e),
+    };
+  } finally {
+    fs.rmSync(file, { force: true });
+  }
+}
+
+/** End-to-end video test: encode a synthetic 1s clip with the same ffmpeg the capture pipeline uses */
+async function deepVideo(): Promise<CheckReport> {
+  const name = '视频管线';
+  const file = mediaPath('deep-check', 'mp4');
+  try {
+    const bin = await locateFfmpeg();
+    if (!bin) {
+      return { group: DEEP_GROUP, name, ok: false, summary: '已跳过 —— 未找到 ffmpeg' };
+    }
+    await runFfmpeg([
+      '-f', 'lavfi', '-i', 'testsrc=duration=1:size=320x180:rate=30',
+      '-pix_fmt', 'yuv420p', '-y', file,
+    ]);
+    if (!fs.existsSync(file) || fs.statSync(file).size === 0) {
+      return { group: DEEP_GROUP, name, ok: false, summary: '编码产物为空' };
+    }
+    return { group: DEEP_GROUP, name, ok: true, summary: `ffmpeg 编码正常（${bin === 'ffmpeg' ? 'PATH' : '本地二进制'}）` };
+  } catch (e) {
+    return {
+      group: DEEP_GROUP,
+      name,
+      ok: false,
+      summary: e instanceof Error ? e.message : String(e),
+      hint: '终端录制合成 mp4 依赖 ffmpeg，请检查安装或 MANTA_SHOW_FFMPEG 设置',
+    };
+  } finally {
+    fs.rmSync(file, { force: true });
+  }
+}
+
 /** Render the result table by group: group header + aligned names + ✓/✗, with manual suggestions under failed entries */
 function renderReports(reports: CheckReport[]): void {
   const groups = [...new Set(reports.map((r) => r.group))];
@@ -174,9 +241,10 @@ function renderReports(reports: CheckReport[]): void {
   }
 }
 
-export async function runDoctor(): Promise<void> {
+export async function runDoctor(args: string[] = []): Promise<void> {
   printBanner();
-  p.intro('环境体检与自动修复');
+  const deep = args.includes('--deep');
+  p.intro(deep ? '环境体检与自动修复（含采集管线实测）' : '环境体检与自动修复');
 
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
 
@@ -199,6 +267,24 @@ export async function runDoctor(): Promise<void> {
     }
     reports.push(await check());
   }
+
+  // --deep: real end-to-end capture, verifying the pipeline rather than just the dependencies
+  if (deep) {
+    const chromiumOk = reports.find((r) => r.name === 'Chromium')?.ok ?? false;
+    if (interactive) spinner.message('正在实测采集管线…');
+    if (chromiumOk) {
+      reports.push(await deepScreenshot());
+    } else {
+      reports.push({
+        group: DEEP_GROUP,
+        name: '截图管线',
+        ok: false,
+        summary: '已跳过 —— Chromium 未安装（先修复上方问题再重试）',
+      });
+    }
+    reports.push(await deepVideo());
+  }
+
   const issues = reports.filter((r) => !r.ok);
   if (interactive) {
     spinner.stop(issues.length === 0 ? '检查完成' : `检查完成，发现 ${issues.length} 个问题`);

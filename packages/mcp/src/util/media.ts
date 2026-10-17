@@ -1,15 +1,16 @@
 import fs from 'node:fs';
+import { homedir } from 'node:os';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 
-/** Media output directory: MANTA_SHOW_OUTPUT takes priority, defaults to ./manta-media under cwd */
+/** Media output directory: MANTA_SHOW_OUTPUT takes priority, defaults to ~/.manta-show under the user home */
 export function outputDir(): string {
-  const dir = process.env.MANTA_SHOW_OUTPUT || path.join(process.cwd(), 'manta-media');
+  const dir = process.env.MANTA_SHOW_OUTPUT || path.join(homedir(), '.manta-show');
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
 
-/** Generate a collision-free output file path, e.g. /abs/manta-media/video-2026-10-16T10-00-00-000Z-a1b2.mp4 */
+/** Generate a collision-free output file path, e.g. /abs/.manta-show/video-2026-10-16T10-00-00-000Z-a1b2.mp4 */
 export function mediaPath(kind: string, ext: string): string {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const name = `${kind}-${stamp}-${randomBytes(3).toString('hex')}.${ext}`;
@@ -20,4 +21,50 @@ export function mediaPath(kind: string, ext: string): string {
 export function relativeRef(file: string): string {
   const rel = path.relative(process.cwd(), file);
   return rel.startsWith('..') ? file : rel;
+}
+
+/** Media file extensions produced by the capture pipeline (screenshots, videos) */
+const MEDIA_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.mp4', '.webm']);
+
+export interface MediaFile {
+  path: string;
+  name: string;
+  size: number;
+  /** mtime in ms since epoch */
+  mtime: number;
+}
+
+/** List media files in the output directory, newest first; missing dir yields [] */
+export function scanMediaFiles(dir: string = outputDir()): MediaFile[] {
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const files: MediaFile[] = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !MEDIA_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
+    const full = path.join(dir, entry.name);
+    try {
+      const stat = fs.statSync(full);
+      files.push({ path: full, name: entry.name, size: stat.size, mtime: stat.mtimeMs });
+    } catch {
+      // File removed between readdir and stat; skip it
+    }
+  }
+  return files.sort((a, b) => b.mtime - a.mtime);
+}
+
+/** Human-readable byte size, e.g. 1.2 MB / 834 KB */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value >= 100 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`;
 }
