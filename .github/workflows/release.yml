@@ -156,4 +156,10 @@ jobs:
         working-directory: packages/mcp
         env:
           NPM_CONFIG_PROVENANCE: 'true'
-        run: pnpm publish --no-git-checks --access public
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@manta-show/mcp@${VERSION}" version >/dev/null 2>&1; then
+            echo "Already published: @manta-show/mcp@${VERSION} — skipping"
+          else
+            pnpm publish --no-git-checks --access public
+          fi

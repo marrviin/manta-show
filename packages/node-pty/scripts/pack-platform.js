@@ -33,6 +33,19 @@ if (!fs.existsSync(path.join(releaseDir, entry))) {
   process.exit(1);
 }
 
+// Guard against packing a stale or wrong-arch build (e.g. after cross-compiling
+// the other arch in the same build/Release dir): verify the binary's reported
+// architecture matches what we are about to publish.
+const expectedArch = { arm64: 'arm64', x64: 'x86_64' }[arch];
+if (expectedArch && platform !== 'win32') {
+  const { execSync } = require('child_process');
+  const info = execSync(`file "${path.join(releaseDir, entry)}"`, { encoding: 'utf8' });
+  if (!info.includes(expectedArch)) {
+    console.error(`Refusing to pack: ${entry} is not ${expectedArch}.\n  ${info.trim()}\nRe-run \`node-gyp rebuild --arch=${arch}\` immediately before packing.`);
+    process.exit(1);
+  }
+}
+
 const target = path.join(outDir, name);
 fs.rmSync(target, { recursive: true, force: true });
 fs.mkdirSync(path.join(target, 'build'), { recursive: true });

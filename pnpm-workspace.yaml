@@ -9,12 +9,12 @@ allowBuilds:
   "@manta-show/node-pty": true
 
 minimumReleaseAgeExclude:
-  - '@manta-show/node-pty@1.1.0-beta34.1 || 1.1.0-beta34.3'
-  - '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.2 || 1.1.0-beta34.3'
-  - '@manta-show/node-pty-darwin-x64@1.1.0-beta34.2 || 1.1.0-beta34.3'
-  - '@manta-show/node-pty-linux-arm64@1.1.0-beta34.3'
-  - '@manta-show/node-pty-linux-x64@1.1.0-beta34.3'
-  - '@manta-show/node-pty-win32-x64@1.1.0-beta34.3'
+  - '@manta-show/node-pty@1.1.0-beta34.1 || 1.1.0-beta34.3 || 1.1.0-beta34.4'
+  - '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.2 || 1.1.0-beta34.3 || 1.1.0-beta34.4'
+  - '@manta-show/node-pty-darwin-x64@1.1.0-beta34.2 || 1.1.0-beta34.3 || 1.1.0-beta34.4'
+  - '@manta-show/node-pty-linux-arm64@1.1.0-beta34.3 || 1.1.0-beta34.4'
+  - '@manta-show/node-pty-linux-x64@1.1.0-beta34.3 || 1.1.0-beta34.4'
+  - '@manta-show/node-pty-win32-x64@1.1.0-beta34.3 || 1.1.0-beta34.4'
 
 onlyBuiltDependencies:
   - electron
