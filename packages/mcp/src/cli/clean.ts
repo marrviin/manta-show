@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import * as p from '@clack/prompts';
 import { formatBytes, outputDir, scanMediaFiles } from '../util/media.js';
-import { printBanner } from './banner.js';
 
 interface CleanOptions {
   /** Delete everything */
@@ -44,8 +43,6 @@ export async function runClean(args: string[]): Promise<void> {
   const opts = parseArgs(args);
   const dir = outputDir();
   const files = scanMediaFiles(dir);
-
-  printBanner();
 
   // Without --all/--older-than: summary only, delete nothing
   if (!opts.all && opts.olderThanMs === undefined) {

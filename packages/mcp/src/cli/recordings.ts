@@ -1,7 +1,6 @@
 import { spawn } from 'node:child_process';
 import * as p from '@clack/prompts';
 import { formatBytes, outputDir, scanMediaFiles } from '../util/media.js';
-import { printBanner } from './banner.js';
 
 interface RecordingsOptions {
   /** Only show the most recent file */
@@ -54,8 +53,6 @@ export async function runRecordings(args: string[]): Promise<void> {
   const opts = parseArgs(args);
   const dir = outputDir();
   const files = scanMediaFiles(dir);
-
-  printBanner();
 
   if (files.length === 0) {
     p.log.warn(`输出目录 ${dir} 中还没有媒体产物（截图 / 视频会保存在这里）`);
