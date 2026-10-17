@@ -52,7 +52,7 @@ jobs:
       - name: Build native bindings
         working-directory: packages/node-pty
         run: |
-          npm install --ignore-scripts --no-package-lock
+          npm install --ignore-scripts --no-package-lock --no-save node-gyp@latest
           npx node-gyp rebuild --arch=${{ matrix.arch }}
 
       - name: Assemble platform package
