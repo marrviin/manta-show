@@ -86,22 +86,6 @@ importers:
       typescript:
         specifier: ^3.8.3
         version: 3.9.10
-    optionalDependencies:
-      '@manta-show/node-pty-darwin-arm64':
-        specifier: 1.1.0-beta34.3
-        version: 1.1.0-beta34.3
-      '@manta-show/node-pty-darwin-x64':
-        specifier: 1.1.0-beta34.3
-        version: 1.1.0-beta34.3
-      '@manta-show/node-pty-linux-arm64':
-        specifier: 1.1.0-beta34.3
-        version: 1.1.0-beta34.3
-      '@manta-show/node-pty-linux-x64':
-        specifier: 1.1.0-beta34.3
-        version: 1.1.0-beta34.3
-      '@manta-show/node-pty-win32-x64':
-        specifier: 1.1.0-beta34.3
-        version: 1.1.0-beta34.3
 
 packages:
 
