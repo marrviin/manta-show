@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import * as p from '@clack/prompts';
 import { chromium } from 'playwright';
-import { locateFfmpeg, runFfmpeg } from '../capture/ffmpeg.js';
+import { downloadBundledFfmpeg, locateFfmpeg, runFfmpeg } from '../capture/ffmpeg.js';
 import { getBrowser } from '../capture/browser.js';
 import { mediaPath, outputDir } from '../util/media.js';
 import { listAgentStatuses, runInit } from './init.js';
@@ -12,7 +12,7 @@ import { printBanner } from './banner.js';
 
 interface Fix {
   desc: string;
-  run: () => void;
+  run: () => void | Promise<void>;
 }
 
 interface CheckReport {
@@ -64,7 +64,9 @@ async function checkFfmpeg(): Promise<CheckReport> {
         ? 'PATH'
         : process.env.MANTA_SHOW_FFMPEG === bin
           ? 'MANTA_SHOW_FFMPEG'
-          : 'ffmpeg-static（依赖自带）';
+          : bin.startsWith(homedir())
+            ? '~/.manta-show/bin（doctor 下载）'
+            : 'ffmpeg-static（依赖自带）';
     return { group: '环境依赖', name: 'ffmpeg', ok: true, summary };
   }
   const hasBrew = whichSync('brew');
@@ -73,15 +75,13 @@ async function checkFfmpeg(): Promise<CheckReport> {
     name: 'ffmpeg',
     ok: false,
     summary: '未找到 —— 终端录制合成 mp4 需要',
-    hint: hasBrew ? undefined : '未检测到 brew，请手动安装 ffmpeg 或设置 MANTA_SHOW_FFMPEG',
-    fix: hasBrew
-      ? {
-          desc: 'brew install ffmpeg',
-          run: () => {
-            spawnSync('brew', ['install', 'ffmpeg'], { stdio: 'inherit' });
-          },
-        }
-      : undefined,
+    hint: '也可以 brew install ffmpeg 或设置 MANTA_SHOW_FFMPEG 指向已有二进制',
+    fix: {
+      desc: `下载 ffmpeg 到 ~/.manta-show/bin（npmmirror 镜像优先）`,
+      run: async () => {
+        await downloadBundledFfmpeg();
+      },
+    },
   };
 }
 
@@ -318,8 +318,12 @@ export async function runDoctor(args: string[] = []): Promise<void> {
       }
       const fixSpinner = p.spinner();
       fixSpinner.start(`执行 ${issue.fix!.desc} …`);
-      issue.fix!.run();
-      fixSpinner.stop('修复动作已执行');
+      try {
+        await issue.fix!.run();
+        fixSpinner.stop('✓ 修复完成');
+      } catch (e) {
+        fixSpinner.stop(`✗ 修复失败：${e instanceof Error ? e.message : String(e)}`);
+      }
     }
   }
 
