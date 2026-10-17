@@ -6,11 +6,14 @@ allowBuilds:
   electron: true
   esbuild: true
   ffmpeg-static: true
-  node-pty: true
+  "@manta-show/node-pty": true
+
+minimumReleaseAgeExclude:
+  - '@manta-show/node-pty@1.1.0-beta34.1'
 
 onlyBuiltDependencies:
   - electron
-  - node-pty
+  - "@manta-show/node-pty"
   - playwright
   - esbuild
   - ffmpeg-static
