@@ -31,7 +31,7 @@ export class WebSession implements SessionBase {
       try {
         await this.recorder.stop(out);
       } catch {
-        // 会话关闭时丢弃未完成的录制
+        // Discard any unfinished recording when the session closes
       }
       this.recorder = null;
     }
@@ -97,7 +97,7 @@ export function registerWebTools(server: McpServer, store: SessionStore): void {
     handle(async ({ url, sessionId }) => {
       const session = store.get('web', sessionId) as WebSession;
       await session.page.goto(url, { waitUntil: 'load', timeout: 30_000 });
-      // 录制中导航时渲染进程可能因截图自愈短暂无响应，标题尽力而为，不阻塞返回
+      // While recording, the renderer may briefly stall during navigation due to the screenshot self-healing; best-effort title, never blocking the return
       const title = await Promise.race([
         session.page.title(),
         new Promise<string>((r) => {

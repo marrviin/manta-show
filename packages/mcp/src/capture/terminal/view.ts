@@ -14,8 +14,9 @@ export function stripAnsi(text: string): string {
 }
 
 /**
- * 终端回放页：一个无头 Playwright 页面里跑 xterm.js，pty 输出实时写入。
- * 视口精确对齐 .xterm-screen 的像素尺寸，避免录制画面出现黑边。
+ * Terminal replay page: xterm.js running in a headless Playwright page, fed with pty output in
+ * real time. The viewport is aligned exactly to the pixel size of .xterm-screen to avoid black
+ * borders in the recording.
  */
 export class TerminalView {
   private constructor(public page: Page) {}
@@ -53,7 +54,7 @@ export class TerminalView {
       { cols, rows },
     );
 
-    // 用 xterm 实际渲染尺寸作为视口，逐像素对齐
+    // Use xterm's actual rendered size as the viewport for pixel-perfect alignment
     const size = await page.evaluate(() => {
       const rect = document.querySelector('.xterm-screen')!.getBoundingClientRect();
       return { w: Math.ceil(rect.width), h: Math.ceil(rect.height) };
@@ -86,7 +87,7 @@ function xtermAssets(): { jsPath: string; cssPath: string } {
   return { jsPath, cssPath: path.join(root, 'css', 'xterm.css') };
 }
 
-/** pty 会话：封装 node-pty，维护输出环形缓冲（供 terminal_read）并转发给回放页 */
+/** pty session: wraps node-pty, maintains an output ring buffer (for terminal_read) and forwards output to the replay page */
 export class PtySession {
   view: TerminalView | null = null;
   exited = false;
@@ -110,7 +111,7 @@ export class PtySession {
   private feed(d: string): void {
     this.buffer = (this.buffer + d).slice(-BUFFER_CAP);
     this.pending += d;
-    // 16ms 批量刷新，避免高频 evaluate 往返
+    // Batch flush every 16ms to avoid high-frequency evaluate round-trips
     this.flushTimer ??= setTimeout(() => {
       this.flushTimer = null;
       const chunk = this.pending;
@@ -131,7 +132,7 @@ export class PtySession {
     return result === 'timeout' ? -1 : (result as { code: number }).code;
   }
 
-  /** SIGINT → 等待退出 → 强杀，返回退出码 */
+  /** SIGINT → wait for exit → force kill, returning the exit code */
   async stop(): Promise<number> {
     if (!this.exited) {
       this.pty.write('\x03');
@@ -150,7 +151,7 @@ export class PtySession {
     }
   }
 
-  /** 最近 N 行渲染后的纯文本，供 Agent 读取输出 */
+  /** Plain text of the last N rendered lines, for the Agent to read output */
   recentText(lines: number): string {
     const plain = stripAnsi(this.buffer);
     const all = plain.replace(/\r/g, '').split('\n');

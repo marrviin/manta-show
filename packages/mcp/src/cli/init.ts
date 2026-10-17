@@ -16,9 +16,9 @@ interface AgentSpec {
 
 const SERVER_NAME = 'manta-show';
 
-/** manta-show 的启动命令：优先用真实 dist/index.js + 当前 node，保证不依赖 PATH */
+/** manta-show's launch command: prefer the real dist/index.js + the current node binary, so PATH isn't required */
 function mcpCommand(): { command: string; args: string[] } {
-  // 本模块位于 dist/cli/init.js（或 src/cli/init.ts），index 入口在其上一级
+  // This module lives at dist/cli/init.js (or src/cli/init.ts); the index entry point is one level up
   const indexJs = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     '..',
@@ -27,18 +27,18 @@ function mcpCommand(): { command: string; args: string[] } {
   if (existsSync(indexJs)) {
     return { command: process.execPath, args: [indexJs] };
   }
-  // 源码方式运行（tsx src/index.ts init）时没有 dist，退回全局 bin
+  // When run from source (tsx src/index.ts init) there is no dist; fall back to the global bin
   return { command: SERVER_NAME, args: [] };
 }
 
-/** 二进制是否在 PATH 上 */
+/** Whether the binary is on PATH */
 function which(name: string): boolean {
   return (process.env.PATH ?? '')
     .split(path.delimiter)
     .some((dir) => dir && existsSync(path.join(dir, name)));
 }
 
-/** 向 JSON 配置的 mcpServers 字段写入配置（保留其余内容） */
+/** Write config into a JSON config's mcpServers field (preserving all other content) */
 function updateJsonMcp(
   configPath: string,
   server: Record<string, unknown>,
@@ -63,7 +63,7 @@ function updateJsonMcp(
   return 'added';
 }
 
-/** 向 Codex 的 config.toml 追加 mcp_servers 段（仅追加，不改写已有内容） */
+/** Append an mcp_servers section to Codex's config.toml (append-only, never rewrites existing content) */
 function updateTomlMcp(
   configPath: string,
   cmd: { command: string; args: string[] },
@@ -79,7 +79,7 @@ function updateTomlMcp(
   return 'added';
 }
 
-/** 配置文件里是否已有 manta-show 的 mcpServers 条目 */
+/** Whether the config file already has an mcpServers entry for manta-show */
 function jsonHasMcp(configPath: string): boolean {
   if (!existsSync(configPath)) return false;
   try {
@@ -92,7 +92,7 @@ function jsonHasMcp(configPath: string): boolean {
   }
 }
 
-/** config.toml 里是否已有 manta-show 的 mcp_servers 段 */
+/** Whether config.toml already has an mcp_servers section for manta-show */
 function tomlHasMcp(configPath: string): boolean {
   if (!existsSync(configPath)) return false;
   return new RegExp(`^\\s*\\[mcp_servers\\.${SERVER_NAME}\\]`, 'm').test(
@@ -138,7 +138,7 @@ function buildAgents(
     },
     {
       name: 'Gemini CLI',
-      // 仅认 PATH 上的可执行文件：~/.gemini 等残留目录不代表还在使用
+      // Only trust executables on PATH: leftover directories like ~/.gemini don't mean it's still in use
       detect: () => which('gemini'),
       hasConfig: () =>
         jsonHasMcp(path.join(home, '.gemini', 'settings.json')),
@@ -160,7 +160,7 @@ export interface AgentStatus {
   configured: boolean;
 }
 
-/** 供 doctor 复用：列出每个 Agent 的安装检测与配置状态 */
+/** Reused by doctor: list each Agent's install detection and config status */
 export function listAgentStatuses(): AgentStatus[] {
   const agents = buildAgents(homedir(), mcpCommand());
   return agents.map((a) => ({

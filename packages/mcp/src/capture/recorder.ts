@@ -24,25 +24,25 @@ export interface RecordResult {
 
 const SAMPLE_INTERVAL_MS = 66; // ≈15fps
 
-/** 单次截图超时：页面导航期间 captureScreenshot 可能无限挂起（等稳定帧与导航竞争） */
+/** Per-screenshot timeout: captureScreenshot can hang indefinitely during page navigation (waiting for a stable frame races with navigation) */
 const SHOT_TIMEOUT_MS = 5_000;
-/** 连续超时上限：超过后判定页面不可采，停止采集循环（保住 stop 流程不挂死） */
+/** Consecutive timeout limit: beyond it the page is deemed un-capturable and the capture loop stops (keeps the stop flow from hanging) */
 const MAX_CONSECUTIVE_TIMEOUTS = 6;
 
-/** 三类录制（web / 终端 / Electron）统一输出的画布尺寸（16:9） */
+/** Unified output canvas size (16:9) for all three recording kinds (web / terminal / Electron) */
 export const OUTPUT_WIDTH = 1920;
 export const OUTPUT_HEIGHT = 1080;
 
 export type RecordFit = 'canvas' | 'native';
 
-/** 统一画布的补边底色：浏览器窗框白底、终端深色底，其余用黑 */
+/** Letterbox background color for the unified canvas: white for browser chrome, dark for terminal, black otherwise */
 function letterboxColor(decoration: RecordDecoration | null): string {
   if (decoration?.kind === 'browser') return '#ffffff';
   if (decoration?.kind === 'terminal') return '#18181b';
   return '#000000';
 }
 
-/** 解析 JPEG 帧的像素尺寸（SOF 段），无需 ffprobe */
+/** Parse the pixel dimensions of a JPEG frame (SOF segment), no ffprobe needed */
 function jpegSize(file: string): { width: number; height: number } | null {
   const buf = readFileSync(file);
   let i = 2;
@@ -63,12 +63,15 @@ function jpegSize(file: string): { width: number; height: number } | null {
 }
 
 /**
- * 统一录制器：通过 CDP Page.captureScreenshot 定时全帧采样（web 页 / Electron 窗口 / 终端回放页通用），
- * stop 时按帧时间戳用 ffmpeg 合成 mp4 (H.264, yuv420p)。
+ * Unified recorder: samples full frames at a fixed interval via CDP Page.captureScreenshot
+ * (works for web pages / Electron windows / the terminal replay page); on stop, assembles the
+ * frames into an mp4 (H.264, yuv420p) with ffmpeg using frame timestamps.
  *
- * 不用 Page.startScreencast：无头模式下各实现的合成器行为不可靠
- * （headless shell 不持续出帧、新无头会推局部损坏帧），轮询全帧截图最稳。
- * 不用 context recordVideo：它只在关闭整个 context 时落盘，无法支持会话中途 start/stop。
+ * Page.startScreencast is not used: compositor behavior across headless implementations is
+ * unreliable (headless shell doesn't produce frames continuously, new headless pushes partially
+ * corrupted frames) — polling full-frame screenshots is the most robust.
+ * context recordVideo is not used: it only flushes to disk when the whole context closes, so it
+ * can't support mid-session start/stop.
  */
 export class Recorder {
   private page!: Page;
@@ -102,11 +105,14 @@ export class Recorder {
     return rec;
   }
 
-  /** 单次截图，带超时；超时视为采集卡死 */
+  /** Single screenshot with a timeout; a timeout is treated as a stalled capture */
   private shot(): Promise<{ data: string } | 'timeout'> {
-    // 新版无头 Chromium（channel: 'chromium'）的窗口合成表面比视口矮约 87px（浏览器 UI 占位），
-    // 且时有时无，直接截图会随机截掉底部一条（终端表现为最后一行被切半、看似不滚动）。
-    // 显式 clip + captureBeyondViewport 离屏渲染完整视口，保证帧内容与视口逐像素一致。
+    // New headless Chromium (channel: 'chromium') has a window compositing surface ~87px shorter
+    // than the viewport (browser UI placeholder), and it comes and goes; a direct screenshot
+    // randomly cuts off a strip at the bottom (for the terminal the last line gets halved and
+    // appears not to scroll).
+    // An explicit clip + captureBeyondViewport renders the full viewport offscreen, guaranteeing
+    // frame content matches the viewport pixel for pixel.
     const viewport = this.page.viewportSize();
     const params = viewport
       ? {
@@ -126,7 +132,7 @@ export class Recorder {
     return race;
   }
 
-  /** 采集卡死自愈：丢弃挂起的 CDP 会话并重建，下一拍继续采 */
+  /** Capture-stall self-healing: drop the pending CDP session and rebuild it, then keep capturing on the next tick */
   private async recoverCdp(): Promise<void> {
     await this.cdp.detach().catch(() => {});
     this.cdp = await this.page.context().newCDPSession(this.page);
@@ -140,9 +146,9 @@ export class Recorder {
         const shot = await this.shot();
         if (this.stopped) break;
         if (shot === 'timeout') {
-          // 挂起的请求留着无害；重建会话避免后续截图排队在同一卡死的 target 上
+          // Leaving the hung request pending is harmless; rebuild the session so later screenshots don't queue on the same stuck target
           await this.recoverCdp().catch(() => {});
-          if (++consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) break; // 页面不可采，放弃采集
+          if (++consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) break; // page un-capturable, give up capturing
         } else {
           consecutiveTimeouts = 0;
           const file = path.join(this.tmpDir, `${String(++this.seq).padStart(6, '0')}.jpg`);
@@ -150,7 +156,7 @@ export class Recorder {
           await writeFile(file, Buffer.from(shot.data, 'base64'));
         }
       } catch {
-        // 页面跳转等瞬态失败：跳过这一拍
+        // Transient failures such as page navigation: skip this tick
       }
       const elapsed = Date.now() - t0;
       await new Promise((r) => setTimeout(r, Math.max(10, SAMPLE_INTERVAL_MS - elapsed)));
@@ -170,7 +176,7 @@ export class Recorder {
         throw new Error('没有捕获到任何画面帧。请确认录制窗口内有交互或动画后重试。');
       }
 
-      // concat 清单：每帧带 duration（由相邻帧时间戳推导），末帧重复一次是 concat demuxer 的要求
+      // concat manifest: each frame carries a duration (derived from adjacent frame timestamps); repeating the last frame is a concat demuxer requirement
       const stopTs = Math.max(Date.now(), this.frames[this.frames.length - 1].ts + SAMPLE_INTERVAL_MS);
       const lines: string[] = ['ffconcat version 1.0'];
       for (let i = 0; i < this.frames.length; i++) {
@@ -189,8 +195,9 @@ export class Recorder {
 
       const durationSec = Math.max(0.1, (stopTs - this.frames[0].ts) / 1000);
 
-      // 扫描各帧尺寸：录制中途窗口/视口变化会产生混尺寸帧，x264 要求恒定分辨率，
-      // 需要先把所有帧归一化到首帧画幅（等比缩放 + 居中补边）
+      // Scan frame sizes: window/viewport changes mid-recording produce mixed-size frames, and
+      // x264 requires a constant resolution, so all frames must first be normalized to the first
+      // frame's dimensions (proportional scale + centered letterbox)
       const firstSize = jpegSize(this.frames[0].file);
       const mixedSize =
         firstSize !== null &&
@@ -199,7 +206,7 @@ export class Recorder {
           return s === null || s.width !== firstSize.width || s.height !== firstSize.height;
         });
 
-      // 第一步：原始帧 → 内容 mp4
+      // Step 1: raw frames → content mp4
       const rawPath = path.join(this.tmpDir, 'raw.mp4');
       const sampleFilter = mixedSize
         ? (() => {
@@ -212,7 +219,7 @@ export class Recorder {
         '-f', 'concat',
         '-safe', '0',
         '-i', listPath,
-        // 采样间隔抖动用 fps 归一化；宽高取偶数满足 yuv420p/x264 要求
+        // fps normalizes jitter in the sampling interval; even width/height satisfies yuv420p/x264 requirements
         '-vf', sampleFilter,
         '-c:v', 'libx264',
         '-preset', 'veryfast',
@@ -221,16 +228,18 @@ export class Recorder {
         rawPath,
       ]);
 
-      // 统一输出 1920×1080：等比缩放后居中补边（fit=native 时保持原始尺寸）
+      // Unified 1920×1080 output: proportional scale then centered letterbox (fit=native keeps the original size)
       const unify = (color: string) =>
         `scale=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:force_original_aspect_ratio=decrease,` +
         `pad=${OUTPUT_WIDTH}:${OUTPUT_HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=${color},format=yuv420p`;
 
-      // 第二步（可选）：叠加窗框装饰
+      // Step 2 (optional): overlay the window chrome decoration
       if (this.decoration) {
         if (!firstSize) throw new Error('无法解析录制帧尺寸，跳过窗框装饰');
-        // 第一遍编码时宽高被 trunc 取偶，装饰画布的内容洞必须按取偶后的尺寸对齐，
-        // 否则奇数尺寸内容（如奇数列的终端）会在右/下边缘露出 1px 底色缝
+        // The first encoding pass truncates width/height to even numbers, so the decoration
+        // canvas's content hole must align with the evened dimensions — otherwise odd-sized
+        // content (e.g. a terminal with an odd column count) shows a 1px background seam at
+        // the right/bottom edges
         const evenSize = {
           contentWidth: firstSize.width - (firstSize.width % 2),
           contentHeight: firstSize.height - (firstSize.height % 2),
@@ -278,7 +287,7 @@ export class Recorder {
     }
   }
 
-  /** 丢弃录制（不产出文件），用于启动后、stop 前的失败清理 */
+  /** Discard the recording (produce no files); used for failure cleanup after start and before stop */
   async dispose(): Promise<void> {
     this.stopped = true;
     await this.loop.catch(() => {});

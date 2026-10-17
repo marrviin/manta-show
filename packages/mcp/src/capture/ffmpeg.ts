@@ -13,13 +13,14 @@ function hasOnPath(bin: string): Promise<boolean> {
 }
 
 /**
- * 定位 ffmpeg：
- * 1. MANTA_SHOW_FFMPEG 环境变量
- * 2. PATH 上的 ffmpeg
- * 3. ffmpeg-static 依赖自带的全静态构建
+ * Locate ffmpeg:
+ * 1. MANTA_SHOW_FFMPEG environment variable
+ * 2. ffmpeg on PATH
+ * 3. The fully static build bundled with the ffmpeg-static dependency
  *
- * 注意不用 playwright 自带的 ffmpeg：它是裁剪版（无 concat demuxer / libx264），合成不了 mp4。
- * 找不到返回 null，由调用方给出可操作的错误提示。
+ * Note: do NOT use playwright's bundled ffmpeg — it's a trimmed build (no concat
+ * demuxer / libx264) and cannot assemble an mp4.
+ * Returns null when not found; the caller surfaces an actionable error message.
  */
 export async function locateFfmpeg(): Promise<string | null> {
   if (cachedPath !== undefined) return cachedPath;
@@ -36,21 +37,21 @@ export async function locateFfmpeg(): Promise<string | null> {
 
   try {
     const require = createRequire(import.meta.url);
-    // ffmpeg-static 的默认导出就是二进制文件的绝对路径
+    // ffmpeg-static's default export is the absolute path to the binary
     const bin = require('ffmpeg-static') as string;
     if (bin && fs.existsSync(bin)) {
       cachedPath = bin;
       return cachedPath;
     }
   } catch {
-    // ffmpeg-static 未安装时忽略
+    // Ignore when ffmpeg-static isn't installed
   }
 
   cachedPath = null;
   return null;
 }
 
-/** 运行一次 ffmpeg（自动覆盖已有输出），失败时抛出带 stderr 摘要的错误 */
+/** Run ffmpeg once (overwrites existing output), throwing an error with a stderr summary on failure */
 export function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const bin = cachedPath;
@@ -58,7 +59,7 @@ export function runFfmpeg(args: string[]): Promise<void> {
       reject(new Error('ffmpeg 未定位，请先调用 locateFfmpeg'));
       return;
     }
-    // -y：输出文件已存在时直接覆盖，避免交互式确认卡死
+    // -y: overwrite existing output files without prompting, avoiding an interactive confirmation hang
     const child = spawn(bin, ['-y', ...args], { stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '';
     child.stderr?.on('data', (d: Buffer) => {

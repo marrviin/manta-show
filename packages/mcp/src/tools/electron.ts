@@ -32,7 +32,7 @@ export class ElectronSession implements SessionBase {
       try {
         await this.recorder.stop(out);
       } catch {
-        // 关闭时丢弃未完成的录制
+        // Discard any unfinished recording on close
       }
       this.recorder = null;
     }
@@ -51,8 +51,8 @@ function selectorError(e: unknown, selector: string): ToolResult {
 }
 
 /**
- * 已安装的 macOS .app（打包产物）→ 取其内部 Electron 可执行文件走 executablePath；
- * 源码目录/入口 js → 保持原样交给本地 electron 运行。
+ * An installed macOS .app (packaged bundle) → use its internal Electron executable via
+ * executablePath; a source directory / entry js is passed through unchanged to the local electron.
  */
 function resolveInstalledAppBundle(app: string): string | undefined {
   const bundle = app.endsWith('.app') ? app : undefined;
@@ -88,7 +88,7 @@ export function registerElectronTools(server: McpServer, store: SessionStore): v
             ? { executablePath, args: args ?? [] }
             : { args: [app, ...(args ?? [])] }),
           cwd,
-          // VS Code 等宿主会注入 ELECTRON_RUN_AS_NODE，导致 Electron 以纯 Node 模式启动失败
+          // Hosts like VS Code inject ELECTRON_RUN_AS_NODE, which makes Electron start in pure Node mode and fail
           env: (() => {
             const env: Record<string, string> = {};
             for (const [k, v] of Object.entries(process.env)) {

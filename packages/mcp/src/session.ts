@@ -11,7 +11,7 @@ export interface SessionBase {
 
 const IDLE_MS = 10 * 60_000;
 
-/** 内存会话表：所有交互工具缺省复用「该类型最近活跃的会话」，空闲超时自动回收 */
+/** In-memory session store: interactive tools default to the most recently used session of a kind, reclaimed after idle timeout */
 export class SessionStore {
   private sessions = new Map<string, SessionBase>();
   private timer: NodeJS.Timeout | null = null;
@@ -32,7 +32,7 @@ export class SessionStore {
     return [...this.sessions.values()].filter((s) => s.kind === kind).map((s) => s.id);
   }
 
-  /** 取会话：显式 sessionId 优先，否则取该类型最近活跃的；找不到/不在则抛可操作错误 */
+  /** Resolve a session: explicit sessionId wins, otherwise the most recently used of that kind; throws an actionable error when missing */
   get(kind: SessionKind, sessionId?: string): SessionBase {
     if (sessionId) {
       const s = this.sessions.get(sessionId);

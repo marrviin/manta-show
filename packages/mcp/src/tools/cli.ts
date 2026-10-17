@@ -30,7 +30,7 @@ export class CliSession implements SessionBase {
       try {
         await this.recorder.stop(out);
       } catch {
-        // 关闭时丢弃未完成的录制
+        // Discard any unfinished recording on close
       }
       this.recorder = null;
     }
@@ -71,7 +71,7 @@ export function registerCliTools(server: McpServer, store: SessionStore): void {
 
       const decoration = decorate === 'terminal' ? { kind: 'terminal' as const } : null;
 
-      // terminal_open 默认开始录制，先确认 ffmpeg 可用，避免 pty 已启动后才失败
+      // terminal_open starts recording by default; verify ffmpeg availability up front to avoid failing after the pty has already launched
       if (decoration && !(await locateFfmpeg())) {
         return errorResult(
           '未找到 ffmpeg，无法录制视频。请安装 ffmpeg（brew install ffmpeg）或通过 MANTA_SHOW_FFMPEG 指定路径。',
@@ -82,7 +82,7 @@ export function registerCliTools(server: McpServer, store: SessionStore): void {
       let session: CliSession;
       let recorder: Recorder | null = null;
       try {
-        // 先开录制再起 pty：若先 spawn，输出可能在录制启动前就画完且不再重绘，视频会缺内容
+        // Start recording before spawning the pty: if spawned first, output may finish rendering before the recorder starts and never repaint, leaving content missing from the video
         recorder = await Recorder.start(view.page, decoration);
         const pty = ptySpawn(command, args ?? [], {
           name: 'xterm-256color',
@@ -98,7 +98,7 @@ export function registerCliTools(server: McpServer, store: SessionStore): void {
         });
         session = new CliSession(store.nextId('cli'), new PtySession(pty));
         session.view = view;
-        session.pty.view = view; // pty 输出转发到回放页
+        session.pty.view = view; // forward pty output to the replay page
         session.recorder = recorder;
         store.add(session);
       } catch (e) {

@@ -1,8 +1,9 @@
 /**
- * manta-show 端到端自测：用 MCP SDK Client + InMemoryTransport 直连 server，
- * 覆盖 web / cli / electron 三条线的「打开 → 交互 → 截图 → 录制 → 产物校验」。
+ * manta-show end-to-end self-test: connects directly to the server via the MCP SDK Client +
+ * InMemoryTransport, covering the web / cli / electron flows:
+ * open → interact → screenshot → record → verify artifacts.
  *
- * 运行：npm test（先 build 再 tsx test/e2e.ts）
+ * Run: npm test (build first, then tsx test/e2e.ts)
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -61,7 +62,7 @@ function expectFile(file: string, minBytes: number, label: string): void {
   console.log(`    → ${label}: ${file} (${(stat.size / 1024).toFixed(0)} KB)`);
 }
 
-/** 用 ffmpeg -i 解析 mp4 时长，校验视频真实有效 */
+/** Parse the mp4 duration via ffmpeg -i to verify the video is genuinely valid */
 async function expectVideo(file: string, minSec: number, label: string): Promise<void> {
   const ffmpegPath = require('ffmpeg-static') as string;
   const { execFileSync } = (await import('node:child_process')) as typeof import('node:child_process');
@@ -160,12 +161,12 @@ console.log('\n== CLI 线 ==');
   await step('terminal_send_key + read', async () => {
     await call('terminal_send_key', { key: 'ctrl+c', sessionId: cliId });
     await sleep(300);
-    // 进程应已被中断；再次 read 不应挂起
+    // The process should have been interrupted; a subsequent read must not hang
     await call('terminal_read', { lines: 5, sessionId: cliId });
   });
 
   await step('terminal_record_stop 产出 mp4', async () => {
-    // open 时已自动开始录制；此处重开一段确保有内容：重新 open 一个短命会话录完整过程
+    // Recording started automatically on open; open a fresh short-lived session here to record a complete take
     const id2 = sessionIdOf(
       await call('terminal_open', {
         command: 'bash',
@@ -196,9 +197,9 @@ console.log('\n== Electron 线 ==');
   try {
     require.resolve('electron');
     electronAvailable = fs.existsSync(path.join(FIXTURES, 'electron-app', 'node_modules', '.bin')) ||
-      true; // electron 二进制由顶层 devDependency 提供
+      true; // the electron binary comes from the top-level devDependency
   } catch {
-    /* 未安装 electron，跳过 */
+    /* electron not installed, skip */
   }
 
   if (!electronAvailable) {

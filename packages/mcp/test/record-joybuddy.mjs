@@ -9,7 +9,8 @@ const pty = new PtySession((await import('node-pty')).spawn('joybuddy', ['-h'], 
 }));
 pty.view = view;
 
-// 等 help 全部输出完（命令本身输出完就退出，等 pty 退出再补 1s 稳妥）
+// Wait for the help output to finish (the command exits once it's done printing; waiting for the
+// pty to exit plus a 1s buffer is the safe option)
 await pty.waitExit(10000);
 await new Promise(r => setTimeout(r, 1000));
 

@@ -2,11 +2,12 @@ import { chromium, type Browser } from 'playwright';
 
 let browserPromise: Promise<Browser> | null = null;
 
-/** 懒加载的全局无头 Chromium，供 web 会话与终端回放页共用 */
+/** Lazily loaded global headless Chromium, shared by web sessions and the terminal replay page */
 export function getBrowser(): Promise<Browser> {
   browserPromise ??= chromium
-    // channel: 'chromium' 使用完整 Chromium 的新无头模式（默认的 headless shell 合成器
-    // 不持续出帧，CDP screencast 只能拿到启动瞬间的画面，录制会全黑）
+    // channel: 'chromium' uses the new headless mode of the full Chromium (the default headless
+    // shell compositor doesn't produce frames continuously, so CDP screencast only captures the
+    // first instant and recordings come out all black)
     .launch({ headless: true, channel: 'chromium' })
     .catch((e) => {
       browserPromise = null;

@@ -9,7 +9,7 @@ export type RecordDecoration =
   | { kind: 'desktop' };
 
 export interface BrowserChromeSpec {
-  /** 页面内容帧宽高（设备像素） */
+  /** Content frame dimensions (device pixels) */
   contentWidth: number;
   contentHeight: number;
 }
@@ -21,10 +21,10 @@ export interface TerminalChromeSpec {
 
 export interface ChromeOverlay {
   pngPath: string;
-  /** 内容帧在合成画布上的摆放位置 */
+  /** Placement of the content frame on the composite canvas */
   contentX: number;
   contentY: number;
-  /** 合成画布总尺寸（偶数，满足 yuv420p） */
+  /** Total composite canvas size (even, to satisfy yuv420p) */
   canvasWidth: number;
   canvasHeight: number;
 }
@@ -32,8 +32,9 @@ export interface ChromeOverlay {
 const even = (n: number) => (n % 2 === 0 ? n : n + 1);
 
 /**
- * 渲染 macOS 风格浏览器窗框（红绿灯 + 空白地址栏 + 圆角）。
- * 窗口直接撑满整个画布：无外圈留白、无投影（视频没有透明通道，留白会变成实色大白边）。
+ * Render a macOS-style browser window chrome (traffic lights + blank address bar + rounded corners).
+ * The window fills the entire canvas: no outer padding, no shadow (video has no alpha channel;
+ * padding would render as a solid white border).
  */
 export async function renderBrowserChrome(
   spec: BrowserChromeSpec,
@@ -41,12 +42,12 @@ export async function renderBrowserChrome(
 ): Promise<ChromeOverlay> {
   const { contentWidth: cw, contentHeight: ch } = spec;
 
-  // 装饰尺寸以 1280 逻辑宽为基准，随内容宽度等比缩放
+  // Decoration sizes are based on a 1280 logical width, scaled proportionally with the content width
   const s = Math.min(2.5, Math.max(1, cw / 1280));
-  const bezel = Math.max(2, Math.round(2 * s)); // 窗框包边
-  const barH = Math.round(52 * s); // 工具栏高度
-  const radius = Math.round(10 * s); // 窗口圆角
-  const dotR = Math.round(7 * s); // 红绿灯半径
+  const bezel = Math.max(2, Math.round(2 * s)); // window frame bezel
+  const barH = Math.round(52 * s); // toolbar height
+  const radius = Math.round(10 * s); // window corner radius
+  const dotR = Math.round(7 * s); // traffic light radius
   const dotGap = Math.round(22 * s);
 
   const windowW = even(cw + 2 * bezel);
@@ -56,7 +57,7 @@ export async function renderBrowserChrome(
   const contentX = bezel;
   const contentY = barH + bezel;
 
-  // 地址栏药丸（空白）：红绿灯右侧留出适度间距，右侧留边
+  // Address bar pill (blank): moderate spacing right of the traffic lights, margin on the right
   const pillX = Math.round(100 * s);
   const pillW = windowW - pillX - Math.round(20 * s);
   const pillH = Math.round(30 * s);
@@ -73,22 +74,22 @@ export async function renderBrowserChrome(
     </mask>
   </defs>
 
-  <!-- 窗口体；内容区挖洞保持透明，让录制画面透出 -->
+  <!-- Window body; the content area is punched out to stay transparent so the recording shows through -->
   <g clip-path="url(#winclip)">
     <rect width="${windowW}" height="${windowH}" fill="#ffffff" mask="url(#hole)"/>
     <rect width="${windowW}" height="${barH}" fill="#f6f6f7"/>
     <line x1="0" y1="${barH - 1}" x2="${windowW}" y2="${barH - 1}" stroke="#e2e4e9" stroke-width="${Math.max(1, s)}"/>
 
-    <!-- 红绿灯 -->
+    <!-- Traffic lights -->
     <circle cx="${dotR + 18 * s}" cy="${barH / 2}" r="${dotR}" fill="#ff5f57"/>
     <circle cx="${dotR + 18 * s + dotGap}" cy="${barH / 2}" r="${dotR}" fill="#febc2e"/>
     <circle cx="${dotR + 18 * s + 2 * dotGap}" cy="${barH / 2}" r="${dotR}" fill="#28c840"/>
 
-    <!-- 地址栏药丸（空白） -->
+    <!-- Address bar pill (blank) -->
     <rect x="${pillX}" y="${pillY}" width="${pillW}" height="${pillH}" rx="${pillH / 2}" ry="${pillH / 2}" fill="#ffffff" stroke="#dcdce0" stroke-width="${Math.max(1, s)}"/>
   </g>
 
-  <!-- 内容区包边：白边盖住内容直角，与窗口圆角衔接 -->
+  <!-- Content bezel: white border covers the content's square corners and joins the window's rounded ones -->
   <rect x="${contentX - bezel}" y="${contentY - bezel}" width="${cw + 2 * bezel}" height="${ch + 2 * bezel}" rx="${radius}" ry="${radius}" fill="none" stroke="#ffffff" stroke-width="${bezel * 2}"/>
 </svg>`;
 
@@ -96,9 +97,11 @@ export async function renderBrowserChrome(
 }
 
 /**
- * 终端在桌面上的装饰：macOS 桌面壁纸 + 终端窗口（红绿灯空白标题栏、深色内容区带边距），
- * 窗口带圆角投影，看起来像在电脑桌面上开着终端执行命令。
- * 壁纸以本地文件引用（不用 base64 内嵌，渲染快一个量级），由本函数复制到 destDir。
+ * Desktop decoration for the terminal: macOS wallpaper + terminal window (blank traffic-light title
+ * bar, dark content area with padding), window has rounded corners and a shadow, looking like a
+ * terminal running commands on a computer desktop.
+ * The wallpaper is referenced as a local file (no base64 embedding, an order of magnitude faster to
+ * render); this function copies it into destDir.
  */
 export async function renderTerminalChrome(
   spec: TerminalChromeSpec,
@@ -107,8 +110,8 @@ export async function renderTerminalChrome(
   const { contentWidth: cw, contentHeight: ch } = spec;
 
   const s = Math.min(2.5, Math.max(1, cw / 1280));
-  const margin = Math.round(56 * s); // 窗口四周的壁纸边距
-  const pad = Math.round(16 * s); // 终端内容四周的深色边距
+  const margin = Math.round(56 * s); // wallpaper margin around the window
+  const pad = Math.round(16 * s); // dark padding around the terminal content
   const titleBarH = Math.round(44 * s);
   const radius = Math.round(12 * s);
   const blur = Math.round(18 * s);
@@ -117,7 +120,7 @@ export async function renderTerminalChrome(
 
   const windowW = even(cw + 2 * pad);
   const windowH = even(titleBarH + ch + 2 * pad);
-  // 画布取 16:9（与统一输出画布同比例，最终缩放无裁切无补边），窗口在壁纸上居中
+  // Canvas is 16:9 (same ratio as the unified output canvas, so the final scale crops/letterboxes nothing); window centered on the wallpaper
   const minW = windowW + 2 * margin;
   const minH = windowH + 2 * margin;
   const canvasW = even(Math.max(minW, Math.round((minH * 16) / 9)));
@@ -132,12 +135,12 @@ export async function renderTerminalChrome(
     <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="${blur}"/>
     </filter>
-    <!-- 壁纸在终端窗口处开洞 -->
+    <!-- Wallpaper with a hole punched at the terminal window -->
     <mask id="winHole">
       <rect width="${canvasW}" height="${canvasH}" fill="white"/>
       <rect x="${winX}" y="${winY}" width="${windowW}" height="${windowH}" rx="${radius}" ry="${radius}" fill="black"/>
     </mask>
-    <!-- 窗口绘制在终端内容处开洞，让录制画面透出 -->
+    <!-- Window drawing with a hole punched at the terminal content so the recording shows through -->
     <mask id="contentHole">
       <rect width="${canvasW}" height="${canvasH}" fill="white"/>
       <rect x="${contentX}" y="${contentY}" width="${cw}" height="${ch}" fill="black"/>
@@ -145,24 +148,24 @@ export async function renderTerminalChrome(
     <clipPath id="winclip">
       <rect x="${winX}" y="${winY}" width="${windowW}" height="${windowH}" rx="${radius}" ry="${radius}"/>
     </clipPath>
-    <!-- 投影只保留窗口轮廓以外 -->
+    <!-- Shadow kept only outside the window outline -->
     <mask id="outside">
       <rect width="${canvasW}" height="${canvasH}" fill="white"/>
       <rect x="${winX}" y="${winY}" width="${windowW}" height="${windowH}" rx="${radius}" ry="${radius}" fill="black"/>
     </mask>
   </defs>
 
-  <!-- macOS 桌面壁纸（窗口处开洞） -->
+  <!-- macOS desktop wallpaper (hole punched at the window) -->
   <g mask="url(#winHole)">
     <image href="wallpaper.jpg" x="0" y="0" width="${canvasW}" height="${canvasH}" preserveAspectRatio="xMidYMid slice"/>
   </g>
 
-  <!-- 终端窗口投影 -->
+  <!-- Terminal window shadow -->
   <g mask="url(#outside)">
     <rect x="${winX}" y="${winY}" width="${windowW}" height="${windowH}" rx="${radius}" ry="${radius}" fill="#0f172a" opacity="0.5" filter="url(#soft)"/>
   </g>
 
-  <!-- 终端窗口体：标题栏 + 深色内容边距（内容处透出录制画面） -->
+  <!-- Terminal window body: title bar + dark content padding (the recording shows through at the content area) -->
   <g clip-path="url(#winclip)" mask="url(#contentHole)">
     <rect width="${canvasW}" height="${canvasH}" fill="#18181b"/>
     <rect width="${canvasW}" height="${winY + titleBarH}" fill="#f6f6f7"/>
@@ -177,8 +180,9 @@ export async function renderTerminalChrome(
 }
 
 /**
- * macOS 桌面装饰：应用窗口（录制内容）带圆角和投影，摆放在桌面壁纸上，无标题栏，
- * 看起来像在电脑上使用。窗口四周留出壁纸边距。
+ * macOS desktop decoration: an app window (the recording content) with rounded corners and a
+ * shadow, placed on the desktop wallpaper with no title bar, looking like an app in use on a
+ * computer. Wallpaper margin is left around the window.
  */
 export async function renderDesktopChrome(
   spec: BrowserChromeSpec,
@@ -187,13 +191,13 @@ export async function renderDesktopChrome(
   const { contentWidth: cw, contentHeight: ch } = spec;
 
   const s = Math.min(2.5, Math.max(1, cw / 1280));
-  const margin = Math.round(56 * s); // 窗口四周的壁纸边距
-  const radius = Math.round(12 * s); // 窗口圆角
-  const blur = Math.round(18 * s); // 投影模糊半径
+  const margin = Math.round(56 * s); // wallpaper margin around the window
+  const radius = Math.round(12 * s); // window corner radius
+  const blur = Math.round(18 * s); // shadow blur radius
 
   const windowW = even(cw);
   const windowH = even(ch);
-  // 画布取 16:9（与统一输出画布同比例，最终缩放无裁切无补边），窗口在壁纸上居中
+  // Canvas is 16:9 (same ratio as the unified output canvas, so the final scale crops/letterboxes nothing); window centered on the wallpaper
   const minW = cw + 2 * margin;
   const minH = ch + 2 * margin;
   const canvasW = even(Math.max(minW, Math.round((minH * 16) / 9)));
@@ -206,19 +210,19 @@ export async function renderDesktopChrome(
     <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="${blur}"/>
     </filter>
-    <!-- 壁纸在窗口处开洞，让录制画面透出 -->
+    <!-- Wallpaper with a hole punched at the window so the recording shows through -->
     <mask id="hole">
       <rect width="${canvasW}" height="${canvasH}" fill="white"/>
       <rect x="${contentX}" y="${contentY}" width="${windowW}" height="${windowH}" rx="${radius}" ry="${radius}" fill="black"/>
     </mask>
   </defs>
 
-  <!-- macOS 桌面壁纸（窗口处挖洞） -->
+  <!-- macOS desktop wallpaper (hole punched at the window) -->
   <g mask="url(#hole)">
     <image href="wallpaper.jpg" x="0" y="0" width="${canvasW}" height="${canvasH}" preserveAspectRatio="xMidYMid slice"/>
   </g>
 
-  <!-- 窗口投影（画在壁纸上、内容之下，且只在窗口轮廓以外） -->
+  <!-- Window shadow (painted on the wallpaper, beneath the content, kept only outside the window outline) -->
   <g mask="url(#hole)">
     <rect x="${contentX}" y="${contentY}" width="${windowW}" height="${windowH}" rx="${radius}" ry="${radius}" fill="none" stroke="#0f172a" stroke-width="${blur * 2}" opacity="0.5" filter="url(#soft)"/>
   </g>
@@ -227,7 +231,7 @@ export async function renderDesktopChrome(
   return renderOverlaySvg(svg, canvasW, canvasH, destDir, contentX, contentY, true);
 }
 
-/** macOS 官方壁纸（Tahoe）资源路径：位于仓库 assets/ 目录（从编译产物 dist/capture 向上两级） */
+/** Path to the official macOS (Tahoe) wallpaper asset: in the repo's assets/ directory (two levels up from dist/capture) */
 function wallpaperPath(): string {
   return path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -239,8 +243,9 @@ function wallpaperPath(): string {
 }
 
 /**
- * SVG → 带透明通道的 PNG（尺寸与合成画布 1:1）。
- * 需要壁纸时把 assets 壁纸复制到同目录，HTML 以 file:// 相对路径引用（同源可加载，解码快）。
+ * SVG → PNG with an alpha channel (dimensions 1:1 with the composite canvas).
+ * When a wallpaper is needed, the assets wallpaper is copied into the same directory and the HTML
+ * references it via a file:// relative path (same-origin loadable, fast to decode).
  */
 async function renderOverlaySvg(
   svg: string,
@@ -269,7 +274,7 @@ async function renderOverlaySvg(
     });
     const page = await context.newPage();
     await page.goto(`file://${htmlPath}`);
-    // 等壁纸图片解码完成再截图
+    // Wait for the wallpaper image to decode before screenshotting
     await page.evaluate(() => Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {}))));
     await page.screenshot({ path: pngPath, omitBackground: true });
     await context.close();

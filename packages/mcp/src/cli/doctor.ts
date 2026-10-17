@@ -14,15 +14,15 @@ interface Fix {
 }
 
 interface CheckReport {
-  /** 分组标题：环境依赖 / 输出与接入 */
+  /** Group title: environment dependencies / output & integration */
   group: string;
   name: string;
   ok: boolean;
-  /** 对齐展示用的一行摘要（不放长路径） */
+  /** One-line summary for aligned display (no long paths) */
   summary: string;
-  /** 失败时的手动建议，挂在对应条目下方 */
+  /** Manual suggestion on failure, shown under the corresponding entry */
   hint?: string;
-  /** 用户确认后可执行的自动修复 */
+  /** Automatic fix, run after the user confirms */
   fix?: Fix;
 }
 
@@ -32,7 +32,7 @@ function whichSync(bin: string): boolean {
     .some((dir) => dir && fs.existsSync(path.join(dir, bin)));
 }
 
-/** 中文等全角字符按 2 列计，用于结果表对齐 */
+/** Full-width characters (e.g. CJK) count as 2 columns, for result table alignment */
 function displayWidth(s: string): number {
   let width = 0;
   for (const ch of s) width += (ch.codePointAt(0) ?? 0) > 0x2e80 ? 2 : 1;
@@ -88,7 +88,7 @@ async function checkChromium(): Promise<CheckReport> {
   try {
     exe = chromium.executablePath();
   } catch {
-    // registry 异常时按未安装处理
+    // Treat a registry failure as not installed
   }
   if (exe && fs.existsSync(exe)) {
     const version = /chromium-\d+/.exec(exe)?.[0] ?? '已安装';
@@ -116,7 +116,7 @@ async function checkChromium(): Promise<CheckReport> {
 function checkOutputDir(): CheckReport {
   const dir = process.env.MANTA_SHOW_OUTPUT ?? './manta-media';
   try {
-    fs.accessSync(outputDir(), fs.constants.W_OK); // outputDir 会顺带自动创建目录
+    fs.accessSync(outputDir(), fs.constants.W_OK); // outputDir() also creates the directory as a side effect
     return { group: '输出与接入', name: '输出目录', ok: true, summary: `${dir} 可写` };
   } catch (e) {
     return {
@@ -159,7 +159,7 @@ function checkMcp(): CheckReport {
   };
 }
 
-/** 按分组渲染结果表：组头 + 名称对齐 + ✓/✗，失败条目下挂手动建议 */
+/** Render the result table by group: group header + aligned names + ✓/✗, with manual suggestions under failed entries */
 function renderReports(reports: CheckReport[]): void {
   const groups = [...new Set(reports.map((r) => r.group))];
   const nameWidth = Math.max(...reports.map((r) => displayWidth(r.name))) + 2;
@@ -180,7 +180,7 @@ export async function runDoctor(): Promise<void> {
 
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
 
-  // 逐项检查并同步刷新 spinner 文案，让 loading 动画可见
+  // Run checks one by one, refreshing the spinner text so the loading animation is visible
   const items: Array<[string, () => CheckReport | Promise<CheckReport>]> = [
     ['Node.js', checkNode],
     ['ffmpeg', checkFfmpeg],
@@ -194,7 +194,7 @@ export async function runDoctor(): Promise<void> {
   for (const [name, check] of items) {
     if (interactive) {
       spinner.message(`正在检查 ${name} …`);
-      // 检查本身极快（全部 <100ms），加个小停顿让逐项进度能被看见
+      // The checks themselves are fast (all <100ms); a small pause makes the per-item progress visible
       await new Promise((r) => setTimeout(r, 250));
     }
     reports.push(await check());

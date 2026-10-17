@@ -7,6 +7,12 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      node-gyp:
+        specifier: ^13.1.0
+        version: 13.1.0
+
+  packages/mcp:
     dependencies:
       '@clack/prompts':
         specifier: ^1.8.1

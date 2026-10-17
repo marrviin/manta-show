@@ -23,7 +23,8 @@ function imageMime(file: string): string {
 }
 
 /**
- * 截图返回体：MCP image content（Agent 可直接"看到"）+ 保存路径 + markdown 引用片段。
+ * Screenshot result body: MCP image content (the Agent can "see" it directly) + save path +
+ * markdown reference snippet.
  */
 export async function imageFileResult(file: string, extra?: string): Promise<ToolResult> {
   const data = (await readFile(file)).toString('base64');
@@ -38,7 +39,8 @@ export async function imageFileResult(file: string, extra?: string): Promise<Too
 }
 
 /**
- * 视频返回体：保存路径 + markdown 引用片段（mp4 无法内嵌返回，Agent 拿路径插文档）。
+ * Video result body: save path + markdown reference snippet (mp4 can't be returned inline, so the
+ * Agent uses the path to embed it in documents).
  */
 export function videoFileResult(file: string, durationSec: number, frameCount: number): ToolResult {
   const text = [
@@ -49,7 +51,7 @@ export function videoFileResult(file: string, durationSec: number, frameCount: n
   return textResult(text);
 }
 
-/** 统一的工具异常包装：抛错转为 isError 结果，便于 Agent 自行恢复 */
+/** Unified tool exception wrapper: converts thrown errors into isError results so the Agent can recover on its own */
 export function handle<A>(fn: (args: A) => Promise<ToolResult>): (args: A) => Promise<ToolResult> {
   return async (args) => {
     try {

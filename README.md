@@ -17,6 +17,20 @@ pnpm build
 
 要求：Node ≥ 20、pnpm。CLI 捕获依赖 node-pty（native 模块；macOS 26 上 1.1.0 正式版有 `posix_spawnp failed` 兼容问题，本仓库固定使用 `1.1.0-beta34`）。pnpm 安装时如提示构建脚本许可，确认 `allowBuilds` 中的 electron / node-pty / ffmpeg-static 为 true（见 `pnpm-workspace.yaml`）。
 
+## 项目结构
+
+pnpm monorepo：
+
+```
+manta-show/
+├── packages/mcp/        # @manta-show/mcp —— MCP Server 本体（bin: manta-show）
+│   ├── src/  test/  dist/  assets/
+├── website/             # 项目介绍网站（纯静态，index.html + docs.html）
+└── pnpm-workspace.yaml  # workspace 与构建脚本许可配置
+```
+
+常用命令（在仓库根目录执行）：`pnpm build` / `pnpm dev` / `pnpm test` / `pnpm test:unify`，均转发到 `packages/mcp`。
+
 录制视频需要 ffmpeg，按以下顺序自动定位：`MANTA_SHOW_FFMPEG` → PATH 上的 ffmpeg → 依赖自带的 `ffmpeg-static` 全静态构建（默认可用，无需额外安装）。注意：playwright 自带的 ffmpeg 是裁剪版（无 libx264），不能用于本项目。
 
 ## 接入 MCP 客户端
@@ -28,7 +42,7 @@ Claude Code（项目级 `.mcp.json` 或 `~/.claude.json`）：
   "mcpServers": {
     "manta-show": {
       "command": "node",
-      "args": ["/absolute/path/to/manta-show/dist/index.js"],
+      "args": ["/absolute/path/to/manta-show/packages/mcp/dist/index.js"],
       "env": {
         "MANTA_SHOW_OUTPUT": "/absolute/path/to/your-project/manta-media"
       }

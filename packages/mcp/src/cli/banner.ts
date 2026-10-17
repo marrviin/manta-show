@@ -19,7 +19,7 @@ function version(): string {
   }
 }
 
-/** init / doctor 开头的 ASCII 横幅（仅 TTY 着色） */
+/** ASCII banner printed at the start of init / doctor (colored only on a TTY) */
 export function printBanner(): void {
   const colored = Boolean(process.stdout.isTTY);
   const cyan = (s: string) => (colored ? `\x1b[36m${s}\x1b[0m` : s);

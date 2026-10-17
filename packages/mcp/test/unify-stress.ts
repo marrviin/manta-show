@@ -1,9 +1,10 @@
 /**
- * 统一 1920×1080 输出方案的压力 / 边界测试：
- * 覆盖极端视口、奇数尺寸、超大内容、像素比、fit=native、
- * 录制中途跳转、二次录制、极短录制、未 stop 直接关会话等异常路径。
+ * Stress / edge-case tests for the unified 1920×1080 output scheme:
+ * covers extreme viewports, odd dimensions, oversized content, device pixel ratios, fit=native,
+ * navigation mid-recording, second recordings, ultra-short recordings, closing a session without
+ * stop, and other abnormal paths.
  *
- * 运行：pnpm test:unify（先 build 再 tsx test/unify-stress.ts）
+ * Run: pnpm test:unify (build first, then tsx test/unify-stress.ts)
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -59,14 +60,14 @@ function sessionIdOf(contents: Content[]): string {
   return m[1];
 }
 
-/** 从 stop 工具返回体里拿视频路径 */
+/** Extract the video path from a stop tool result body */
 function videoPathOf(contents: Content[]): string {
   const file = /视频已生成：(.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
   if (!file) throw new Error(`返回体中没有视频路径：${contents.map((c) => c.text ?? '').join(' | ').slice(0, 200)}`);
   return file;
 }
 
-/** ffmpeg -i 解析出视频宽高与编码 */
+/** Parse video width/height and codec via ffmpeg -i */
 function probeVideo(file: string): { w: number; h: number; h264: boolean; durationSec: number } {
   let info = '';
   try {
@@ -85,7 +86,7 @@ function probeVideo(file: string): { w: number; h: number; h264: boolean; durati
   };
 }
 
-/** 断言统一画布：1920×1080 / h264 / 时长下限 */
+/** Assert the unified canvas: 1920×1080 / h264 / minimum duration */
 function expectCanvas(file: string, label: string, minSec = 0.5): void {
   const v = probeVideo(file);
   if (!v.h264) throw new Error(`${label} 不是 H.264`);
@@ -94,7 +95,7 @@ function expectCanvas(file: string, label: string, minSec = 0.5): void {
   console.log(`    → ${label}: ${v.w}×${v.h}, ${v.durationSec.toFixed(2)}s, ${(fs.statSync(file).size / 1024).toFixed(0)} KB`);
 }
 
-/** 抽第一帧某坐标的 RGB 像素（rawvideo），验证补边底色；width 为视频宽度（默认统一画布 1920） */
+/** Extract the RGB pixel at a coordinate from the first frame (rawvideo) to verify the letterbox color; width is the video width (default unified canvas 1920) */
 function pixelAt(file: string, x: number, y: number, width = 1920): [number, number, number] {
   const tmp = path.join(os.tmpdir(), `manta-unify-pixel-${process.pid}.raw`);
   try {
@@ -116,8 +117,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const pageUrl = 'file://' + path.join(FIXTURES, 'page.html');
 
 /**
- * 打开一个 web 会话跑完用例后无论成败都关闭，
- * 避免失败用例泄漏仍在录制的会话拖垮后续用例（15fps 采样循环很吃资源）。
+ * Open a web session, run the test case, and close it regardless of success or failure,
+ * so a failing case can't leak a still-recording session and drag down later cases
+ * (the 15fps sampling loop is resource-hungry).
  */
 async function withWebSession(
   openArgs: Record<string, unknown>,
@@ -194,7 +196,7 @@ console.log('\n== Web：极端视口与补边 ==');
       const px = pixelAt(file, 4, 4);
       if (isBlack(px)) throw new Error('16:9 满帧角落不应是补边黑色');
       if (isWhite(px) && pixelAt(file, 1915, 4).every((v) => v > 235)) {
-        // 右上角也是纯白才可能是补边；页面 header 是渐变紫，白角即异常
+        // It can only be letterboxing if the top-right corner is pure white too; the page header is a purple gradient, so a white corner means a bug
         const header = pixelAt(file, 960, 100);
         if (header.every((v) => v > 235)) throw new Error('16:9 输入不应产生补边');
       }
@@ -218,7 +220,7 @@ console.log('\n== Web：极端视口与补边 ==');
       await sleep(1200);
       const file = videoPathOf(await call('browser_record_stop', { fit: 'native', sessionId: id }));
       const v = probeVideo(file);
-      // 内容 1024×640 + bezel 2×2 + 标题栏 52（s=1）→ 1028×696
+      // Content 1024×640 + bezel 2×2 + title bar 52 (s=1) → 1028×696
       if (v.w !== 1028 || v.h !== 696) throw new Error(`native 装饰画布应为 1028×696，实测 ${v.w}×${v.h}`);
       console.log(`    → native: ${v.w}×${v.h}（窗框画布尺寸）`);
     });
@@ -257,14 +259,14 @@ console.log('\n== Web：极端视口与补边 ==');
     await withWebSession({ url: pageUrl }, async (id) => {
       await call('browser_record_start', { sessionId: id });
       await sleep(500);
-      // withWebSession 的 finally 会再 close 一次：重复 close 应幂等不报错
+      // withWebSession's finally closes it again: a repeated close must be idempotent without erroring
       await call('browser_close', { sessionId: id });
     });
   });
 
   await step('视口底部完整性：native 高度=视口 810，底部色带在帧内（87px 表面裁切回归）', async () => {
     await withWebSession({ url: pageUrl, width: 1440, height: 810 }, async (id) => {
-      // 顶部紫、底部 200px 绿，全部 fixed 定位铺满视口
+      // Purple on top, a 200px green band at the bottom, all fixed-position filling the viewport
       await call('browser_evaluate', {
         sessionId: id,
         script:
@@ -301,7 +303,7 @@ console.log('\n== Web：极端视口与补边 ==');
 
 console.log('\n== CLI：极端尺寸与奇数列 ==');
 {
-  /** 同 withWebSession：无论成败都回收 pty + 回放页 */
+  /** Same as withWebSession: reclaim the pty + replay page regardless of success or failure */
   async function withCliSession(
     openArgs: Record<string, unknown>,
     fn: (id: string) => Promise<void>,
@@ -356,7 +358,7 @@ console.log('\n== CLI：极端尺寸与奇数列 ==');
         await sleep(1500);
         const file = videoPathOf(await call('terminal_record_stop', { fit: 'native', sessionId: id }));
         const v = probeVideo(file);
-        // 30 行 × 16px（fontSize 14 + lineHeight 1.0）= 480；被 87px 表面裁切时只有 393
+        // 30 rows × 16px (fontSize 14 + lineHeight 1.0) = 480; clipped by the 87px surface bug it would be only 393
         if (v.h !== 480) throw new Error(`30 行终端 native 高度应为 480，实测 ${v.h}（视口底部被裁切）`);
         console.log(`    → native: ${v.w}×${v.h}（30 行全部在帧内）`);
       },
@@ -423,8 +425,9 @@ console.log('\n== Electron：装饰与 native ==');
 console.log('\n== 尺寸突变：录制中途视口变化 ==');
 {
   /**
-   * resize 没有 MCP 工具入口，直接用 Playwright 驱动页面复现
-   * 「录制中途画面尺寸变化」的场景（应用自调窗口 / 响应式演示等）。
+   * Resize has no MCP tool entry point, so drive the page directly with Playwright to reproduce
+   * the "frame size changes mid-recording" scenario (app-managed window resizing / responsive
+   * demos, etc.).
    */
   await step('录制中途 setViewportSize → 统一画布仍 1920×1080（内容按首帧归一化）', async () => {
     const browser = await getBrowser();
@@ -434,7 +437,7 @@ console.log('\n== 尺寸突变：录制中途视口变化 ==');
       await page.goto(pageUrl, { waitUntil: 'load' });
       const rec = await Recorder.start(page, { kind: 'browser' });
       await sleep(800);
-      await page.setViewportSize({ width: 640, height: 1000 }); // 尺寸突变
+      await page.setViewportSize({ width: 640, height: 1000 }); // sudden size change
       await sleep(800);
       const file = path.join(outputDir(), 'resize-mid-canvas.mp4');
       const result = await rec.stop(file, { fit: 'canvas' });
@@ -458,7 +461,7 @@ console.log('\n== 尺寸突变：录制中途视口变化 ==');
       const file = path.join(outputDir(), 'resize-mid-native.mp4');
       await rec.stop(file, { fit: 'native' });
       const v = probeVideo(file);
-      // 首帧 1024×640 + bezel 2×2 + 标题栏 52（s=1）→ 1028×696，装饰按首帧锚定
+      // First frame 1024×640 + bezel 2×2 + title bar 52 (s=1) → 1028×696; the decoration is anchored to the first frame
       if (v.w !== 1028 || v.h !== 696) throw new Error(`native 应锚定首帧画布 1028×696，实测 ${v.w}×${v.h}`);
       console.log(`    → native: ${v.w}×${v.h}（首帧锚定）`);
     } finally {

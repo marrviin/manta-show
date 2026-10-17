@@ -1,37 +1,19 @@
 {
-  "name": "manta-show",
+  "name": "manta-show-monorepo",
   "version": "0.1.0",
-  "description": "MCP server for AI agents: capture high-quality screenshots and videos of web pages, Electron apps and CLI tools, ready for README/product docs.",
-  "type": "module",
-  "bin": {
-    "manta-show": "dist/index.js"
-  },
+  "private": true,
+  "description": "Monorepo for manta-show: MCP server for AI agents to capture screenshots and videos of web pages, Electron apps and CLI tools.",
   "engines": {
     "node": ">=20"
   },
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "test": "pnpm build && tsx test/e2e.ts",
-    "test:unify": "pnpm build && tsx test/unify-stress.ts",
-    "postinstall": "playwright install chromium || echo '[manta-show] playwright install chromium failed; run it manually'"
-  },
-  "dependencies": {
-    "@clack/prompts": "^1.8.1",
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "@xterm/xterm": "^5.5.0",
-    "ffmpeg-static": "^5.3.0",
-    "node-pty": "1.1.0-beta34",
-    "playwright": "^1.53.0",
-    "playwright-core": "1.64.1",
-    "zod": "^3.24.0"
-  },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "electron": "^33.0.0",
-    "node-gyp": "^13.1.0",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
+    "node-gyp": "^13.1.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @manta-show/mcp dev",
+    "start": "pnpm --filter @manta-show/mcp start",
+    "test": "pnpm --filter @manta-show/mcp test",
+    "test:unify": "pnpm --filter @manta-show/mcp test:unify"
   }
 }
