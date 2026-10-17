@@ -88,11 +88,20 @@ importers:
         version: 3.9.10
     optionalDependencies:
       '@manta-show/node-pty-darwin-arm64':
-        specifier: 1.1.0-beta34.2
-        version: 1.1.0-beta34.2
+        specifier: 1.1.0-beta34.3
+        version: 1.1.0-beta34.3
       '@manta-show/node-pty-darwin-x64':
-        specifier: 1.1.0-beta34.2
-        version: 1.1.0-beta34.2
+        specifier: 1.1.0-beta34.3
+        version: 1.1.0-beta34.3
+      '@manta-show/node-pty-linux-arm64':
+        specifier: 1.1.0-beta34.3
+        version: 1.1.0-beta34.3
+      '@manta-show/node-pty-linux-x64':
+        specifier: 1.1.0-beta34.3
+        version: 1.1.0-beta34.3
+      '@manta-show/node-pty-win32-x64':
+        specifier: 1.1.0-beta34.3
+        version: 1.1.0-beta34.3
 
 packages:
 
@@ -290,19 +299,9 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
-  '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.2':
-    resolution: {integrity: sha512-BBE1r5nhCyBmf9H8G8e7jxiC6c3UYuMfQcLbB4pRUnoDp+kGbC5k9raVrhWfgeS+oe1DB/sYN2CVxsl3wyVe0g==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.3':
     resolution: {integrity: sha512-VvJLrgYcz+MAuR3d2uJSaw4rUZb4NOZwwAlmVMkDDH6e1QT0HH5IvSEd9g2raP9kI7pBJLon4FhZaC7niADNEQ==}
     cpu: [arm64]
-    os: [darwin]
-
-  '@manta-show/node-pty-darwin-x64@1.1.0-beta34.2':
-    resolution: {integrity: sha512-CS6aoeQiDN/PRHwY7eq2cg9/Cc5vdenJIPX6u6EDYGm1Hkz30hOgKNOmpt7idm7SPkN3u0sZ8wPmWzMVQtfWkA==}
-    cpu: [x64]
     os: [darwin]
 
   '@manta-show/node-pty-darwin-x64@1.1.0-beta34.3':
@@ -2158,13 +2157,7 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
-  '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.2':
-    optional: true
-
   '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.3':
-    optional: true
-
-  '@manta-show/node-pty-darwin-x64@1.1.0-beta34.2':
     optional: true
 
   '@manta-show/node-pty-darwin-x64@1.1.0-beta34.3':
