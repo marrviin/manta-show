@@ -1,0 +1,14 @@
+packages: []
+
+allowBuilds:
+  electron: true
+  esbuild: true
+  ffmpeg-static: true
+  node-pty: true
+
+onlyBuiltDependencies:
+  - electron
+  - node-pty
+  - playwright
+  - esbuild
+  - ffmpeg-static
