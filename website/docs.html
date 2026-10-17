@@ -67,8 +67,12 @@ pnpm build</pre>
       <ul>
         <li>环境变量 <code>MANTA_SHOW_FFMPEG</code> 指定的路径</li>
         <li>PATH 上的 ffmpeg</li>
-        <li>依赖自带的 <code>ffmpeg-static</code> 全静态构建(默认可用,无需额外安装)</li>
+        <li><code>~/.manta-show/bin</code>(doctor 下载)</li>
+        <li>依赖自带的 <code>ffmpeg-static</code> 全静态构建(可选依赖,装不上不阻断安装)</li>
       </ul>
+      <div class="callout">
+        <b>网络受限环境:</b><code>ffmpeg-static</code> 安装脚本需从 GitHub 下载二进制,若安装时网络不通,<code>npm install -g @manta-show/mcp</code> 仍会成功;之后跑一次 <code>manta-show doctor</code>,会自动从 npmmirror 镜像下载 ffmpeg 到 <code>~/.manta-show/bin</code>。
+      </div>
       <div class="callout warn">
         <b>注意:</b>Playwright 自带的 ffmpeg 是裁剪版(无 libx264),不能用于本项目。
       </div>

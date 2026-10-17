@@ -18,6 +18,15 @@ pnpm build
 
 要求：Node ≥ 20、pnpm。CLI 捕获依赖 node-pty（native 模块；macOS 26 上 1.1.0 正式版有 `posix_spawnp failed` 兼容问题，本仓库固定使用 `1.1.0-beta34`）。pnpm 安装时如提示构建脚本许可，确认 `allowBuilds` 中的 electron / node-pty / ffmpeg-static 为 true（见 `pnpm-workspace.yaml`）。
 
+### 终端用户（npm 安装）
+
+```bash
+npm install -g @manta-show/mcp
+```
+
+- `ffmpeg-static` 是**可选依赖**：安装脚本需从 GitHub 下载二进制，网络受限时安装不会失败，跑一次 `manta-show doctor` 会自动从 npmmirror 镜像下载到 `~/.manta-show/bin`
+- 已有系统 ffmpeg 的用户无需上述步骤（按 `MANTA_SHOW_FFMPEG` → PATH → `~/.manta-show/bin` → 内置 `ffmpeg-static` 顺序自动定位）
+
 ## 项目结构
 
 pnpm monorepo：
@@ -32,7 +41,7 @@ manta-show/
 
 常用命令（在仓库根目录执行）：`pnpm build` / `pnpm dev` / `pnpm test` / `pnpm test:e2e` / `pnpm test:unify`，均转发到 `packages/mcp`。
 
-录制视频需要 ffmpeg，按以下顺序自动定位：`MANTA_SHOW_FFMPEG` → PATH 上的 ffmpeg → 依赖自带的 `ffmpeg-static` 全静态构建（默认可用，无需额外安装）。注意：playwright 自带的 ffmpeg 是裁剪版（无 libx264），不能用于本项目。
+录制视频需要 ffmpeg，按以下顺序自动定位：`MANTA_SHOW_FFMPEG` → PATH 上的 ffmpeg → `~/.manta-show/bin`（doctor 下载）→ 依赖自带的 `ffmpeg-static` 全静态构建（可选依赖，装不上不阻断安装）。注意：playwright 自带的 ffmpeg 是裁剪版（无 libx264），不能用于本项目。
 
 ## 接入 MCP 客户端
 
