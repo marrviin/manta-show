@@ -24,8 +24,8 @@ importers:
         specifier: ^5.5.0
         version: 5.5.0
       node-pty:
-        specifier: npm:@manta-show/node-pty@1.1.0-beta34.3
-        version: '@manta-show/node-pty@1.1.0-beta34.3'
+        specifier: npm:@manta-show/node-pty@1.1.0-beta34.4
+        version: '@manta-show/node-pty@1.1.0-beta34.4'
       playwright:
         specifier: ^1.53.0
         version: 1.64.1
@@ -86,6 +86,22 @@ importers:
       typescript:
         specifier: ^3.8.3
         version: 3.9.10
+    optionalDependencies:
+      '@manta-show/node-pty-darwin-arm64':
+        specifier: 1.1.0-beta34.4
+        version: 1.1.0-beta34.4
+      '@manta-show/node-pty-darwin-x64':
+        specifier: 1.1.0-beta34.4
+        version: 1.1.0-beta34.4
+      '@manta-show/node-pty-linux-arm64':
+        specifier: 1.1.0-beta34.4
+        version: 1.1.0-beta34.4
+      '@manta-show/node-pty-linux-x64':
+        specifier: 1.1.0-beta34.4
+        version: 1.1.0-beta34.4
+      '@manta-show/node-pty-win32-x64':
+        specifier: 1.1.0-beta34.4
+        version: 1.1.0-beta34.4
 
 packages:
 
@@ -283,33 +299,33 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
-  '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.3':
-    resolution: {integrity: sha512-VvJLrgYcz+MAuR3d2uJSaw4rUZb4NOZwwAlmVMkDDH6e1QT0HH5IvSEd9g2raP9kI7pBJLon4FhZaC7niADNEQ==}
+  '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.4':
+    resolution: {integrity: sha512-7zkWub1txCUhlFE7z1k2mnv6TxCj5Bue2Sw3Iws2z14x16C32IN/KcgKjvdNTHU3o5EpbFaVrJmET/6se3jvtQ==}
     cpu: [arm64]
     os: [darwin]
 
-  '@manta-show/node-pty-darwin-x64@1.1.0-beta34.3':
-    resolution: {integrity: sha512-bI3cYKoW+fIwJ7OGeOULXb6mryEuUinaYhMh1liAzbeDpC1Dupb0K5lnzgtyy+13auGZIYgHfDeuq//OlEtHKg==}
+  '@manta-show/node-pty-darwin-x64@1.1.0-beta34.4':
+    resolution: {integrity: sha512-NqAM+WdDvgMb3oi0MhbzvRIvJF13SftWacXi8z04P8TX1MmGxS18e0x/CK/mq4ROK9/JPCY8tOrE7oD+z+EZJA==}
     cpu: [x64]
     os: [darwin]
 
-  '@manta-show/node-pty-linux-arm64@1.1.0-beta34.3':
-    resolution: {integrity: sha512-bmgUuglU5ES2ym+clkQ5UMPbcQMzrSzEqFWFfuoNGy04AJlZXc1PrR7tledE0CoAMQsScJV1tloWgs/iXL5mNQ==}
+  '@manta-show/node-pty-linux-arm64@1.1.0-beta34.4':
+    resolution: {integrity: sha512-deoPvnQKtv4yI303x23UQY6fjydsbtLh5I7sHlcF99YJDQthq9GTyTcPDT88TLBb2DAUE1sTIR2Jd0wJDF+MWA==}
     cpu: [arm64]
     os: [linux]
 
-  '@manta-show/node-pty-linux-x64@1.1.0-beta34.3':
-    resolution: {integrity: sha512-NZ9N9lGmN4XstKdjGDhuw3Gq8aNYA9L4tRH/HDpFK/m2QM7igtVyzeWxKzrW6KHMqHWiKgleV4K99SXE+8KiVA==}
+  '@manta-show/node-pty-linux-x64@1.1.0-beta34.4':
+    resolution: {integrity: sha512-TNlnb0lrzsYpm35GjuDNqeGT2+nB0+hVVNar0fH++plXzQEcbQ4yGR+XwXCAWlfkFcficT4DUFBzkRqpVJ/ioA==}
     cpu: [x64]
     os: [linux]
 
-  '@manta-show/node-pty-win32-x64@1.1.0-beta34.3':
-    resolution: {integrity: sha512-7hOsNvnYXp+00c5LJpgnbqcbsuXP7U81jLtSV7ZFoX6oBYlSKmE4d+pRFO9ZBWi3VLqWn6EH/7iiPARvk5WXuQ==}
+  '@manta-show/node-pty-win32-x64@1.1.0-beta34.4':
+    resolution: {integrity: sha512-UZ3Hgfu0VeNy3OdNXDElwe3kRD58GAzR3kKceCLcJzKNt9Ju+xiSeeZ67VL1Mtnuf/01muX40D/yA7AEPViA6Q==}
     cpu: [x64]
     os: [win32]
 
-  '@manta-show/node-pty@1.1.0-beta34.3':
-    resolution: {integrity: sha512-aC+x7iEZs0C5AzJHXSXhHv0kGbtMQD3X0noz82Qg1Qj3KZxgrC6GmgzbYlXLl5FCj0YLE7cJImWrL11jyfh9kQ==}
+  '@manta-show/node-pty@1.1.0-beta34.4':
+    resolution: {integrity: sha512-bP7dXXd77cOFNfeIGU4X7Va/ZSCwe8Td95VRpNXfxhggTkYontoukYRmmx5pexcsYpkCuinAtue/g4NLvq2DZQ==}
 
   '@modelcontextprotocol/sdk@1.32.1':
     resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
@@ -2141,30 +2157,30 @@ snapshots:
     dependencies:
       minipass: 7.1.3
 
-  '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.3':
+  '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.4':
     optional: true
 
-  '@manta-show/node-pty-darwin-x64@1.1.0-beta34.3':
+  '@manta-show/node-pty-darwin-x64@1.1.0-beta34.4':
     optional: true
 
-  '@manta-show/node-pty-linux-arm64@1.1.0-beta34.3':
+  '@manta-show/node-pty-linux-arm64@1.1.0-beta34.4':
     optional: true
 
-  '@manta-show/node-pty-linux-x64@1.1.0-beta34.3':
+  '@manta-show/node-pty-linux-x64@1.1.0-beta34.4':
     optional: true
 
-  '@manta-show/node-pty-win32-x64@1.1.0-beta34.3':
+  '@manta-show/node-pty-win32-x64@1.1.0-beta34.4':
     optional: true
 
-  '@manta-show/node-pty@1.1.0-beta34.3':
+  '@manta-show/node-pty@1.1.0-beta34.4':
     dependencies:
       node-addon-api: 7.1.1
     optionalDependencies:
-      '@manta-show/node-pty-darwin-arm64': 1.1.0-beta34.3
-      '@manta-show/node-pty-darwin-x64': 1.1.0-beta34.3
-      '@manta-show/node-pty-linux-arm64': 1.1.0-beta34.3
-      '@manta-show/node-pty-linux-x64': 1.1.0-beta34.3
-      '@manta-show/node-pty-win32-x64': 1.1.0-beta34.3
+      '@manta-show/node-pty-darwin-arm64': 1.1.0-beta34.4
+      '@manta-show/node-pty-darwin-x64': 1.1.0-beta34.4
+      '@manta-show/node-pty-linux-arm64': 1.1.0-beta34.4
+      '@manta-show/node-pty-linux-x64': 1.1.0-beta34.4
+      '@manta-show/node-pty-win32-x64': 1.1.0-beta34.4
 
   '@modelcontextprotocol/sdk@1.32.1(supports-color@8.1.1)(zod@3.25.76)':
     dependencies:
