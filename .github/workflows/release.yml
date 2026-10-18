@@ -77,8 +77,15 @@ jobs:
           NAME=$(node -p "require('./package.json').name")
           if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
             echo "Already published: ${NAME}@${VERSION} — skipping"
-          else
-            npm publish --tag beta --access public
+          elif ! out=$(npm publish --tag beta --access public 2>&1); then
+            # A version may be invisible to `npm view` while npm's post-publish
+            # scan holds it; re-publishing then fails with E409. Treat as done.
+            if echo "$out" | grep -qE 'E409|previously (published|staged)'; then
+              echo "Version exists but is not yet visible (post-publish scan) — treating as published"
+            else
+              echo "$out" >&2
+              exit 1
+            fi
           fi
 
   publish-fork:
