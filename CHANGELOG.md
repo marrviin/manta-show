@@ -3,7 +3,7 @@
 All notable changes to `@manta-show/mcp` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are the npm package versions.
 
-## [Unreleased]
+## [0.0.8] — 2026-10-19
 
 ### Added
 
@@ -18,6 +18,8 @@ All notable changes to `@manta-show/mcp` are documented here. Format follows
 - Self-demo asset generator (`pnpm demos`) producing the README / website media via the real MCP
   surface; README now ships self-produced demo GIFs and is English-first with a Chinese version
   (`README.zh-CN.md`).
+- Website i18n (en/zh with persisted language toggle); capability-lane demos re-recorded so each
+  lane shows its own capture line; workflow section redesigned to a scroll-pinned transcript.
 
 ### Fixed
 
