@@ -3,13 +3,19 @@ import { readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { CDPSession, Page } from 'playwright';
-import { locateFfmpeg, runFfmpeg } from './ffmpeg.js';
+import { t } from '../i18n/index.js';
+import { FFMPEG_MISSING_MESSAGE, locateFfmpeg } from '../deps/ffmpeg.js';
+import { runFfmpeg } from './encode.js';
 import {
+  planBrowserCanvas,
   renderBrowserChrome,
   renderDesktopChrome,
   renderTerminalChrome,
+  type BrowserCanvasPlan,
+  type BrowserChromeSpec,
+  type ChromeOverlay,
   type RecordDecoration,
-} from './chrome.js';
+} from './decoration.js';
 
 interface Frame {
   file: string;
@@ -83,24 +89,39 @@ export class Recorder {
   private stopped = true;
   private loop: Promise<void> = Promise.resolve();
   private decoration: RecordDecoration | null = null;
+  private cursor = false;
+  /** Browser-decoration viewport plan (content + chrome composes to exactly OUTPUT_W×OUTPUT_H) */
+  private plan: BrowserCanvasPlan | null = null;
+  private originalViewport: { width: number; height: number } | null = null;
 
   private constructor() {}
 
-  static async start(page: Page, decoration: RecordDecoration | null = null): Promise<Recorder> {
+  static async start(
+    page: Page,
+    decoration: RecordDecoration | null = null,
+    opts: { cursor?: boolean } = {},
+  ): Promise<Recorder> {
     const ffmpeg = await locateFfmpeg();
-    if (!ffmpeg) {
-      throw new Error(
-        '未找到 ffmpeg，无法录制视频。请安装 ffmpeg（brew install ffmpeg）或通过 MANTA_SHOW_FFMPEG 指定路径。',
-      );
-    }
+    if (!ffmpeg) throw new Error(FFMPEG_MISSING_MESSAGE);
 
     const rec = new Recorder();
     rec.page = page;
     rec.decoration = decoration;
+    rec.cursor = opts.cursor ?? false;
     rec.tmpDir = await mkdtemp(path.join(os.tmpdir(), 'manta-show-rec-'));
     rec.cdp = await page.context().newCDPSession(page);
     rec.stopped = false;
     rec.startedAt = Date.now();
+
+    // Browser decoration: pre-plan the viewport so window chrome + content compose to exactly
+    // 1920×1080 (frame px == CSS px at capture scale 1). The first captured frame verifies the
+    // mapping at stop time; a mismatch falls back to the fit-and-letterbox path.
+    if (decoration?.kind === 'browser') {
+      rec.originalViewport = page.viewportSize();
+      rec.plan = planBrowserCanvas(OUTPUT_WIDTH, OUTPUT_HEIGHT);
+      await page.setViewportSize(rec.plan.viewport);
+    }
+
     rec.loop = rec.captureLoop();
     return rec;
   }
@@ -138,11 +159,76 @@ export class Recorder {
     this.cdp = await this.page.context().newCDPSession(this.page);
   }
 
+  /**
+   * Synthetic cursor overlay: headless screenshots contain no real pointer, so a recorded demo
+   * shows clicks as sudden state jumps. Inject a cursor div that follows mousemove and a ripple
+   * on mousedown (re-injected every tick — navigation wipes the DOM).
+   * Returns false on timeout (page stalled); evaluation errors propagate to the capture loop
+   * as transient failures. Guarded by the same timeout as shot() — a hanging evaluate would
+   * otherwise stall the capture loop before the shot-timeout self-healing can kick in.
+   */
+  private async ensureCursor(): Promise<boolean> {
+    const inject = this.page.evaluate(() => {
+      if (document.getElementById('__manta-cursor')) return;
+      const style = document.createElement('style');
+      style.id = '__manta-cursor-style';
+      style.textContent =
+        '@keyframes __mantaRipple{from{transform:translate(-50%,-50%) scale(.35);opacity:.9}' +
+        'to{transform:translate(-50%,-50%) scale(1.7);opacity:0}}';
+      document.documentElement.appendChild(style);
+
+      const cursor = document.createElement('div');
+      cursor.id = '__manta-cursor';
+      cursor.style.cssText =
+        'position:fixed;left:0;top:0;z-index:2147483647;pointer-events:none;opacity:0;transition:opacity .12s;';
+      cursor.innerHTML =
+        '<svg width="18" height="22" viewBox="0 0 18 22"><path d="M1.5 1 L1.5 17 L6 13.3 L8.6 19.3 L11.6 18 L9 12.1 L14 11.8 Z" ' +
+        'fill="#111" fill-opacity=".92" stroke="#fff" stroke-width="1.3" stroke-linejoin="round"/></svg>';
+      document.documentElement.appendChild(cursor);
+
+      window.addEventListener(
+        'mousemove',
+        (e) => {
+          cursor.style.opacity = '1';
+          cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+        },
+        { capture: true, passive: true },
+      );
+      window.addEventListener(
+        'mousedown',
+        (e) => {
+          const ripple = document.createElement('div');
+          ripple.style.cssText =
+            `position:fixed;left:${e.clientX}px;top:${e.clientY}px;width:44px;height:44px;border-radius:50%;` +
+            'border:2.5px solid rgba(255,255,255,.95);' +
+            'box-shadow:0 0 0 1px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.25);' +
+            'z-index:2147483646;pointer-events:none;animation:__mantaRipple .45s ease-out forwards;';
+          document.documentElement.appendChild(ripple);
+          ripple.addEventListener('animationend', () => ripple.remove());
+        },
+        { capture: true },
+      );
+    });
+    return Promise.race([
+      inject.then(() => true),
+      new Promise<false>((r) => {
+        const t = setTimeout(() => r(false), SHOT_TIMEOUT_MS);
+        t.unref?.();
+      }),
+    ]);
+  }
+
   private async captureLoop(): Promise<void> {
     let consecutiveTimeouts = 0;
     while (!this.stopped) {
       const t0 = Date.now();
       try {
+        // A stalled page here counts toward the consecutive-timeout limit, same as a stalled shot
+        if (this.cursor && !(await this.ensureCursor())) {
+          await this.recoverCdp().catch(() => {});
+          if (++consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) break;
+          continue;
+        }
         const shot = await this.shot();
         if (this.stopped) break;
         if (shot === 'timeout') {
@@ -151,9 +237,12 @@ export class Recorder {
           if (++consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS) break; // page un-capturable, give up capturing
         } else {
           consecutiveTimeouts = 0;
+          const ts = Date.now();
           const file = path.join(this.tmpDir, `${String(++this.seq).padStart(6, '0')}.jpg`);
-          this.frames.push({ file, ts: Date.now() });
           await writeFile(file, Buffer.from(shot.data, 'base64'));
+          // List the frame only after its file is safely on disk — a manifest entry without a
+          // file would make the concat demuxer fail opaquely at stop time
+          this.frames.push({ file, ts });
         }
       } catch {
         // Transient failures such as page navigation: skip this tick
@@ -169,11 +258,18 @@ export class Recorder {
       this.stopped = true;
       await this.loop.catch(() => {});
       await this.cdp.detach().catch(() => {});
+      // Recording done — give the session its original viewport back (best-effort; the page may
+      // already be closed after a navigation crash)
+      if (this.originalViewport) {
+        const vp = this.originalViewport;
+        this.originalViewport = null;
+        await this.page.setViewportSize(vp).catch(() => {});
+      }
     }
 
     try {
       if (this.frames.length === 0) {
-        throw new Error('没有捕获到任何画面帧。请确认录制窗口内有交互或动画后重试。');
+        throw new Error(t('recorder.noFrames'));
       }
 
       // concat manifest: each frame carries a duration (derived from adjacent frame timestamps); repeating the last frame is a concat demuxer requirement
@@ -235,7 +331,7 @@ export class Recorder {
 
       // Step 2 (optional): overlay the window chrome decoration
       if (this.decoration) {
-        if (!firstSize) throw new Error('无法解析录制帧尺寸，跳过窗框装饰');
+        if (!firstSize) throw new Error(t('recorder.decorationSizeFail'));
         // The first encoding pass truncates width/height to even numbers, so the decoration
         // canvas's content hole must align with the evened dimensions — otherwise odd-sized
         // content (e.g. a terminal with an odd column count) shows a 1px background seam at
@@ -244,16 +340,57 @@ export class Recorder {
           contentWidth: firstSize.width - (firstSize.width % 2),
           contentHeight: firstSize.height - (firstSize.height % 2),
         };
-        const overlay =
-          this.decoration.kind === 'browser'
-            ? await renderBrowserChrome(evenSize, this.tmpDir)
-            : this.decoration.kind === 'terminal'
-              ? await renderTerminalChrome(evenSize, this.tmpDir)
-              : await renderDesktopChrome(evenSize, this.tmpDir);
+        // Viewport was pre-planned (browser: first frame confirms the frame-px == CSS-px mapping;
+        // terminal: fixed canvas with the hole rendered from the actual frame size) so the chrome
+        // composes 1:1 on the output canvas — no scale, no bars
+        const plan = this.plan;
+        const planned =
+          (this.decoration.kind === 'browser' &&
+            plan !== null &&
+            firstSize.width === plan.contentWidth &&
+            firstSize.height === plan.contentHeight) ||
+          (this.decoration.kind === 'terminal' && this.decoration.canvas !== undefined);
+        let overlay: ChromeOverlay;
+        if (this.decoration.kind === 'browser') {
+          const spec: BrowserChromeSpec =
+            planned && plan !== null
+              ? {
+                  contentWidth: plan.contentWidth,
+                  contentHeight: plan.contentHeight,
+                  canvas: {
+                    width: plan.canvasWidth,
+                    height: plan.canvasHeight,
+                    barHeight: plan.barHeight,
+                  },
+                }
+              : evenSize;
+          overlay = await renderBrowserChrome(spec, this.tmpDir);
+        } else if (this.decoration.kind === 'terminal') {
+          overlay = await renderTerminalChrome(
+            {
+              contentWidth: evenSize.contentWidth,
+              contentHeight: evenSize.contentHeight,
+              canvas: this.decoration.canvas,
+            },
+            this.tmpDir,
+          );
+        } else {
+          overlay = await renderDesktopChrome(evenSize, this.tmpDir);
+        }
         try {
+          // Offsets must be even: ffmpeg pad truncates them to chroma alignment for yuv420p, and
+          // an odd offset would shift the frame 1px inside the chrome hole (see evenDown)
+          const cx = overlay.contentX - (overlay.contentX % 2);
+          const cy = overlay.contentY - (overlay.contentY % 2);
+          // Planned compose already lands on OUTPUT_W×OUTPUT_H; otherwise canvas fit still
+          // letterboxes into it (fit=native keeps the decorated native size)
           const vf =
-            `[0:v]pad=${overlay.canvasWidth}:${overlay.canvasHeight}:${overlay.contentX}:${overlay.contentY}:color=white[p];` +
-            `[p][1:v]overlay=0:0${fit === 'canvas' ? `,${unify(letterboxColor(this.decoration))}` : ',format=yuv420p'}[v]`;
+            `[0:v]pad=${overlay.canvasWidth}:${overlay.canvasHeight}:${cx}:${cy}:color=white[p];` +
+            `[p][1:v]overlay=0:0${
+              planned || fit !== 'canvas'
+                ? ',format=yuv420p'
+                : `,${unify(letterboxColor(this.decoration))}`
+            }[v]`;
           await runFfmpeg([
             '-i', rawPath,
             '-i', overlay.pngPath,

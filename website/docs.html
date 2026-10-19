@@ -11,13 +11,17 @@
 
 <nav>
   <div class="container nav-inner">
-    <a class="logo" href="index.html"><span class="logo-mark">🪁</span>manta-show</a>
-    <div class="nav-links">
-      <a href="index.html#features">特性</a>
-      <a href="index.html#capabilities">能力</a>
-      <a href="docs.html" class="active">文档</a>
+    <a class="logo" href="index.html"><span class="logo-mark"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 19 9l-7 6-7-6 7-7z"/><path d="M12 15v4"/><path d="M12 19c0 1.6-1.6 2.6-3.2 2.6"/></svg></span>manta-show</a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="index.html#features">特性</a>
+        <a href="index.html#capabilities">能力</a>
+        <a href="docs.html" class="active">文档</a>
+      </div>
+      <a class="gh-btn" href="https://github.com/marrviin/manta-show" aria-label="GitHub" title="GitHub">
+        <svg viewBox="0 0 16 16" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
     </div>
-    <a class="gh-btn" href="https://github.com/marrviin/manta-show">GitHub ↗</a>
   </div>
 </nav>
 
@@ -60,18 +64,18 @@ git clone &lt;this-repo&gt; &amp;&amp; cd manta-show
 pnpm install
 pnpm build</pre>
       <div class="callout">
-        <b>node-pty 说明:</b>CLI 捕获依赖 node-pty(native 模块)。macOS 26 上 1.1.0 正式版有 <code>posix_spawnp failed</code> 兼容问题,本仓库固定使用 <code>1.1.0-beta34</code>。pnpm 安装时如提示构建脚本许可,确认 <code>allowBuilds</code> 中的 electron / node-pty / ffmpeg-static 为 true(见 <code>pnpm-workspace.yaml</code>)。
+        <b>node-pty 说明:</b>CLI 捕获依赖 node-pty(native 模块)。macOS 26 上 1.1.0 正式版有 <code>posix_spawnp failed</code> 兼容问题,本仓库固定使用 <code>1.1.0-beta34</code>。pnpm 安装时如提示构建脚本许可,确认 <code>allowBuilds</code> 中的 electron / node-pty 为 true(见 <code>pnpm-workspace.yaml</code>)。
       </div>
       <h3>ffmpeg</h3>
       <p>录制视频需要 ffmpeg,按以下顺序自动定位:</p>
       <ul>
         <li>环境变量 <code>MANTA_SHOW_FFMPEG</code> 指定的路径</li>
         <li>PATH 上的 ffmpeg</li>
-        <li><code>~/.manta-show/bin</code>(doctor 下载)</li>
-        <li>依赖自带的 <code>ffmpeg-static</code> 全静态构建(可选依赖,装不上不阻断安装)</li>
+        <li><code>~/.manta-show/bin</code>(init/doctor 下载)</li>
+        <li>依赖自带的预编译平台包 <code>@manta-show/ffmpeg-&lt;platform&gt;-&lt;arch&gt;</code>(无 install 脚本,npm 12 默认屏蔽依赖脚本不影响)</li>
       </ul>
       <div class="callout">
-        <b>网络受限环境:</b><code>ffmpeg-static</code> 安装脚本需从 GitHub 下载二进制,若安装时网络不通,<code>npm install -g @manta-show/mcp</code> 仍会成功;之后跑一次 <code>manta-show doctor</code>,会自动从 npmmirror 镜像下载 ffmpeg 到 <code>~/.manta-show/bin</code>。
+        <b>网络受限环境:</b>内置 ffmpeg 随 npm 包分发(npmmirror 自动镜像),安装无需访问 GitHub;仅在平台包未覆盖的环境上,跑一次 <code>manta-show doctor</code> 会自动从 npmmirror 镜像下载 ffmpeg 到 <code>~/.manta-show/bin</code>。
       </div>
       <div class="callout warn">
         <b>注意:</b>Playwright 自带的 ffmpeg 是裁剪版(无 libx264),不能用于本项目。
@@ -82,23 +86,22 @@ pnpm build</pre>
       <h2>接入 MCP 客户端</h2>
       <p>Claude Code 在项目级 <code>.mcp.json</code> 或 <code>~/.claude.json</code> 中配置;Cursor 在 <code>~/.cursor/mcp.json</code> 中使用同样结构。</p>
       <div class="callout">
-        <b>懒人方式:</b>运行 <code>npx @manta-show/mcp init</code>,自动检测已安装的 AI Agent(Claude Code、Cursor、Gemini CLI、Codex)并写入配置;遇到问题用 <code>npx @manta-show/mcp doctor</code> 体检修复。
+        <b>懒人方式:</b>运行 <code>manta-show init</code>,自动检测已安装的 AI Agent(Claude Code、Cursor、Gemini CLI、Codex)并写入配置,随后完成环境准备:检测 Chromium / ffmpeg,缺失项一次性确认后<b>带下载进度</b>自动安装(走 npmmirror 镜像加速);遇到问题用 <code>manta-show doctor</code> 体检修复(含可选依赖如容器运行时的检查与安装指引)。
       </div>
       <pre>{
   <span class="k">"mcpServers"</span>: {
     <span class="k">"manta-show"</span>: {
-      <span class="k">"command"</span>: <span class="s">"node"</span>,
-      <span class="k">"args"</span>: [<span class="s">"/absolute/path/to/manta-show/packages/mcp/dist/index.js"</span>],
-      <span class="k">"env"</span>: {
-        <span class="k">"MANTA_SHOW_OUTPUT"</span>: <span class="s">"/absolute/path/to/your-output-dir"</span>
-      }
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"@manta-show/mcp"</span>]
     }
   }
 }</pre>
-      <h3>环境变量</h3>
+      <div class="callout">
+        <b>全局安装过</b>(<code>npm install -g @manta-show/mcp</code>):<code>command</code> 可直接用 <code>manta-show</code>、<code>args</code> 留空。从源码开发时,改为 <code>command: "node"</code> 指向 <code>packages/mcp/dist/index.js</code> 本地构建产物。环境变量均可不配,按需设置(见下表)。
+      </div>
+      <h3>环境变量(均可不配,按需设置)</h3>
       <table>
         <tr><th>变量</th><th>默认</th><th>说明</th></tr>
-        <tr><td>MANTA_SHOW_OUTPUT</td><td>~/.manta-show(用户目录下)</td><td>媒体输出目录,需要产物进文档项目时指向它</td></tr>
         <tr><td>MANTA_SHOW_FFMPEG</td><td>自动定位</td><td>指定 ffmpeg 可执行文件路径</td></tr>
       </table>
     </section>
@@ -111,12 +114,12 @@ pnpm build</pre>
         <tr><td>browser_open</td><td>打开网页,返回 sessionId(url, width=1440, height=810, deviceScaleFactor=2)</td></tr>
         <tr><td>browser_navigate</td><td>会话内跳转</td></tr>
         <tr><td>browser_snapshot</td><td>可访问性树快照,用于确定选择器</td></tr>
-        <tr><td>browser_click / browser_hover</td><td>按 CSS 选择器点击 / 悬停</td></tr>
+        <tr><td>browser_click / browser_hover</td><td>按选择器点击 / 悬停(支持 CSS / text= / role= 等)</td></tr>
         <tr><td>browser_type</td><td>输入文本(可选回车提交)</td></tr>
         <tr><td>browser_press_key / browser_scroll</td><td>按键 / 滚动</td></tr>
         <tr><td>browser_evaluate</td><td>在页面执行 JS 表达式</td></tr>
         <tr><td>browser_screenshot</td><td>截图(<code>selector</code> 元素级裁剪,<code>fullPage</code> 整页),返回图片 + 路径</td></tr>
-        <tr><td>browser_record_start / browser_record_stop</td><td>录制期间继续交互,stop 产出 mp4;见下方装饰选项</td></tr>
+        <tr><td>browser_record_start / browser_record_stop</td><td>录制期间继续交互,stop 产出 mp4;start 传 steps 可批量执行编排动作并自动出片;见下方装饰选项</td></tr>
         <tr><td>browser_close</td><td>关闭会话</td></tr>
       </table>
       <h3>装饰选项</h3>
@@ -137,12 +140,22 @@ pnpm build</pre>
       <p>基于 node-pty + xterm.js 回放页,对被录程序零侵入。</p>
       <table>
         <tr><th>工具</th><th>说明</th></tr>
-        <tr><td>terminal_open</td><td>启动命令并<b>自动开始录制</b>(command, args, cwd, cols=120, rows=30)</td></tr>
+        <tr><td>terminal_open</td><td>启动命令并<b>自动开始录制</b>(command, args, cwd, env, isolation, image, cols=120, rows=30);<code>isolation: 'container'</code> 在一次性 Docker 容器中运行,与宿主完全隔离、退出即销毁,重复演示始终是真实的首次执行</td></tr>
         <tr><td>terminal_read</td><td>读最近 N 行渲染后纯文本(去 ANSI),Agent 判断状态用</td></tr>
         <tr><td>terminal_send / terminal_send_key</td><td>输入文本 / 具名按键(enter、ctrl+c、上下左右……)</td></tr>
+        <tr><td>terminal_wait</td><td>阻塞等待输出中出现指定文本(子串匹配)或超时,附最近输出——比反复 terminal_read 轮询省轮次</td></tr>
         <tr><td>terminal_record_stop</td><td>导出 mp4</td></tr>
         <tr><td>terminal_stop / terminal_close</td><td>结束进程 / 释放会话</td></tr>
       </table>
+      <div class="callout">
+        <b>两种用法,语义不同:</b><code>open</code> 直接运行命令(如 <code>command: "npm"</code>)只录输出,命令本身不出现在画面中,适合一次性 CLI / CI 场景;要演示"命令被敲入并执行",先 <code>open</code> 交互 shell(<code>bash -i</code>)再用 <code>terminal_send</code> 发送命令,输入由 TTY 回显进画面,效果与真人操作一致。按命令行为选隔离:自包含命令(安装、构建、demo CLI)和操作某个项目目录的命令(scaffold、build、lint 等,<code>cwd</code> 指向样例项目即可,产物落回宿主)用 <code>isolation: 'container'</code>,既真实又可复现,且不会把真实项目/配置录进画面;读写用户真实环境的命令(如 init 写 ~/.claude.json)必须在宿主运行,重复演示可用 <code>env: { HOME: "/tmp/demo-home" }</code> 指向预构造标记文件的一次性目录,不碰真实配置。
+      </div>
+      <div class="callout">
+        <b>重复演示与状态隔离:</b>CLI 的所有状态都落在文件系统上,重复录制同一条命令会因上次残留(已安装、文件已存在、缓存命中)而走样。<code>terminal_open</code> 传 <code>isolation: 'container'</code>(配 <code>image</code> 锁版本,如 <code>node:22</code>)即可让命令在一次性 Docker 容器中运行:与 CI 的临时环境同一机制,命令及其全部状态变化与宿主完全隔离,容器退出即销毁,每次录制都是真实的首次执行,宿主零污染。传 <code>cwd</code> 时该目录挂载到容器 /workspace(CLI 生成的文件可从宿主查看),不传则容器文件系统自包含。需要本机有 Docker 或 Podman(macOS 推荐 OrbStack / colima;<code>manta-show doctor</code> 会检查并给出安装指引)。
+      </div>
+      <div class="callout">
+        <b>容器环境按场景定制</b>(<code>isolation: 'container'</code> 时):运行时用 <code>image</code>(python:3.12、golang:1.22…);模拟项目文件在宿主准备夹具目录后传 <code>cwd</code>;注入模拟的全局配置用 <code>volumes</code>(docker 语法,如 /tmp/demo-gitconfig:/root/.gitconfig);容器内预装依赖、造文件用交互 shell(bash -i + terminal_send),这些准备动作本身也是可录制的演示内容。
+      </div>
       <h3>装饰选项</h3>
       <p><code>terminal_open</code> 的 <code>decorate</code> 参数:</p>
       <ul>
@@ -160,7 +173,7 @@ pnpm build</pre>
         <tr><td>electron_snapshot</td><td>界面可访问性快照</td></tr>
         <tr><td>electron_click / electron_type / electron_press_key</td><td>界面交互</td></tr>
         <tr><td>electron_screenshot</td><td>窗口 / 元素截图</td></tr>
-        <tr><td>electron_record_start / electron_record_stop</td><td>录制 / 导出 mp4;见下方装饰选项</td></tr>
+        <tr><td>electron_record_start / electron_record_stop</td><td>录制 / 导出 mp4;start 传 steps 可批量执行动作并自动出片;见下方装饰选项</td></tr>
         <tr><td>electron_close</td><td>关闭应用</td></tr>
       </table>
       <h3>装饰选项</h3>
@@ -215,7 +228,7 @@ pnpm build</pre>
 <footer>
   <div class="container">
     <div class="foot-inner">
-      <span>🪁 <a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
+      <span><a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
       <span><a href="index.html">首页</a> · <a href="docs.html">文档</a></span>
     </div>
   </div>

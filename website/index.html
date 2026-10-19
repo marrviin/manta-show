@@ -5,19 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>manta-show — 为 AI Agent 定制的全场景产品媒体捕获 MCP Server</title>
 <meta name="description" content="manta-show 是一个 MCP Server,通过代码级控制为网页、Electron 桌面应用、CLI 工具自动生成高画质截图与 mp4 视频,用于快速补齐网站和 README 文档。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@1,9..144,600&family=Noto+Serif+SC:wght@700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <nav>
   <div class="container nav-inner">
-    <a class="logo" href="index.html"><span class="logo-mark">🪁</span>manta-show</a>
-    <div class="nav-links">
-      <a href="index.html#features" class="active">特性</a>
-      <a href="index.html#capabilities">能力</a>
-      <a href="docs.html">文档</a>
+    <a class="logo" href="index.html"><span class="logo-mark"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 19 9l-7 6-7-6 7-7z"/><path d="M12 15v4"/><path d="M12 19c0 1.6-1.6 2.6-3.2 2.6"/></svg></span>manta-show</a>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="index.html#features" class="active">特性</a>
+        <a href="index.html#capabilities">能力</a>
+        <a href="docs.html">文档</a>
+      </div>
+      <a class="gh-btn" href="https://github.com/marrviin/manta-show" aria-label="GitHub" title="GitHub">
+        <svg viewBox="0 0 16 16" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
     </div>
-    <a class="gh-btn" href="https://github.com/marrviin/manta-show">GitHub ↗</a>
   </div>
 </nav>
 
@@ -55,28 +62,28 @@
 <section id="features">
   <div class="container">
     <div class="sec-head">
-      <div class="kicker">Why manta-show</div>
+      <div class="kicker">Why manta-show<span class="k-meta">4 reasons · 0 permissions</span></div>
       <h2>为零干扰、可自动化的媒体捕获而设计</h2>
       <p>全部通过渲染层与 TTY 拦截采集,不需要人坐在电脑前,也不打扰正在运行的程序。</p>
     </div>
     <div class="feature-grid">
       <div class="feature">
-        <div class="icon">🖥️</div>
+        <div class="icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
         <h3>零 OS 级录屏</h3>
         <p>全部经 Chromium 渲染层采集:无屏幕录制权限、无窗口抖动,CI 里也能跑。</p>
       </div>
       <div class="feature">
-        <div class="icon">⌨️</div>
+        <div class="icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M7 16h10"/></svg></div>
         <h3>零侵入 CLI 捕获</h3>
         <p>TTY 文本流拦截回放,不改动你的 CLI 一行代码,产出即用的高清 mp4。</p>
       </div>
       <div class="feature">
-        <div class="icon">🎬</div>
+        <div class="icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg></div>
         <h3>统一媒体管线</h3>
         <p>视频统一输出 mp4 (H.264),截图直接以 image content 返回,拿来即用。</p>
       </div>
       <div class="feature">
-        <div class="icon">🤖</div>
+        <div class="icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
         <h3>面向 Agent 设计</h3>
         <p>会话式细粒度工具、可恢复的错误提示,返回体自带可插入 README 的 markdown 片段。</p>
       </div>
@@ -87,7 +94,7 @@
 <section id="install" class="install-band">
   <div class="container">
     <div class="sec-head">
-      <div class="kicker">Install</div>
+      <div class="kicker">Install<span class="k-meta">1 command · 4 agents detected</span></div>
       <h2>一条命令,装好即用</h2>
       <p>自动检测本机已安装的 AI Agent(Claude Code、Cursor、Gemini CLI、Codex),把 manta-show 直接注册进它们的 MCP 配置。</p>
     </div>
@@ -98,12 +105,6 @@
         <code>npx @manta-show/mcp init</code>
         <button class="copy-btn" data-copy="npx @manta-show/mcp init">复制</button>
       </div>
-      <div class="install-cmd">
-        <span class="cmd-tag">体检</span>
-        <span class="prompt">$</span>
-        <code>npx @manta-show/mcp doctor</code>
-        <button class="copy-btn" data-copy="npx @manta-show/mcp doctor">复制</button>
-      </div>
     </div>
     <p class="install-note">
       装完后对 Agent 说一句「用 manta-show 录个演示」即可。源码方式安装见<a href="docs.html#install">文档</a>。
@@ -111,62 +112,61 @@
   </div>
 </section>
 
-<section id="capabilities" style="background: var(--bg-soft); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+<section id="capabilities" style="background: rgba(16, 20, 29, 0.55); backdrop-filter: blur(24px) saturate(140%); border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);">
   <div class="container">
     <div class="sec-head">
-      <div class="kicker">Capabilities</div>
+      <div class="kicker"><span class="k-live">●</span>Capabilities<span class="k-meta">3 lanes · 1080p · H.264</span></div>
       <h2>三条能力线,一套工具语法</h2>
       <p>网页、命令行、桌面应用 —— 同样的「打开 → 交互 → 录制」节奏。以下演示均由 manta-show 自己录制。</p>
     </div>
-    <div class="caps">
-      <div class="cap">
-        <div class="cap-info">
-          <span class="tag">browser_*</span>
+    <div class="cap-scroller">
+      <div class="cap-steps">
+        <div class="cap-step" data-lane="0" style="--cap-color:#6d9bff; --cap-glow:rgba(109,155,255,0.16)">
+          <div class="ci-head"><span class="ci-ghost">01</span><span class="ci-tag">browser_*</span></div>
           <h3>网页</h3>
           <p>无头浏览器高清渲染,Agent 按可访问性快照自主定位元素、点击、输入、录屏。</p>
-          <ul>
+          <ul class="ci-feats">
             <li>元素级与整页截图</li>
             <li>录制中继续交互</li>
             <li>可叠加 macOS 浏览器窗框</li>
           </ul>
         </div>
-        <div>
-          <div class="video-frame"><video src="media/manta-journal-demo.mp4" autoplay muted loop playsinline controls></video></div>
-          <div class="video-caption">网页交互录制</div>
-        </div>
-      </div>
-
-      <div class="cap">
-        <div>
-          <div class="video-frame"><video src="media/cli-demo.mp4" autoplay muted loop playsinline controls></video></div>
-          <div class="video-caption">终端命令录制</div>
-        </div>
-        <div class="cap-info">
-          <span class="tag">terminal_*</span>
+        <div class="cap-step" data-lane="1" style="--cap-color:#34d399; --cap-glow:rgba(52,211,153,0.14)">
+          <div class="ci-head"><span class="ci-ghost">02</span><span class="ci-tag">terminal_*</span></div>
           <h3>命令行</h3>
           <p>在 pty 中启动任意命令,Agent 读输出、程序化按键交互,对被录程序零侵入。</p>
-          <ul>
+          <ul class="ci-feats">
             <li>读渲染后文本判断运行状态</li>
             <li>程序化输入与按键</li>
             <li>可叠加终端窗口装饰</li>
           </ul>
         </div>
-      </div>
-
-      <div class="cap">
-        <div class="cap-info">
-          <span class="tag">electron_*</span>
+        <div class="cap-step" data-lane="2" style="--cap-color:#b18cff; --cap-glow:rgba(177,140,255,0.16)">
+          <div class="ci-head"><span class="ci-ghost">03</span><span class="ci-tag">electron_*</span></div>
           <h3>Electron 桌面应用</h3>
           <p>启动应用捕获主窗口,界面快照驱动交互,窗口与元素级截图。</p>
-          <ul>
+          <ul class="ci-feats">
             <li>窗口 / 元素级截图</li>
             <li>可叠加 macOS 桌面壁纸装饰</li>
             <li>保持原始尺寸输出可选</li>
           </ul>
         </div>
-        <div>
-          <div class="video-frame"><video src="media/doctor-demo-typed.mp4" autoplay muted loop playsinline controls></video></div>
-          <div class="video-caption">Electron 应用录制</div>
+      </div>
+      <div class="cap-stage-wrap">
+        <div class="cap-stage">
+          <div class="cap-screen" style="--cap-color:#6d9bff; --cap-glow:rgba(109,155,255,0.16)">
+            <div class="cap-layer" data-lane="0"><div class="video-frame"><video src="media/manta-journal-demo.mp4" autoplay muted loop playsinline controls></video></div></div>
+            <div class="cap-layer" data-lane="1"><div class="video-frame"><video src="media/cli-demo.mp4" muted loop playsinline controls></video></div></div>
+            <div class="cap-layer" data-lane="2"><div class="video-frame"><video src="media/doctor-demo-typed.mp4" muted loop playsinline controls></video></div></div>
+          </div>
+          <div class="cap-stage-bar">
+            <div class="cap-dots">
+              <button class="cap-dot" data-lane="0" style="--cap-color:#6d9bff" type="button"><span class="n">01</span>网页</button>
+              <button class="cap-dot" data-lane="1" style="--cap-color:#34d399" type="button"><span class="n">02</span>命令行</button>
+              <button class="cap-dot" data-lane="2" style="--cap-color:#b18cff" type="button"><span class="n">03</span>Electron</button>
+            </div>
+            <div class="video-caption cap-caption">网页交互录制</div>
+          </div>
         </div>
       </div>
     </div>
@@ -176,22 +176,63 @@
 <section id="flow">
   <div class="container">
     <div class="sec-head">
-      <div class="kicker">Workflow</div>
+      <div class="kicker"><span class="k-live">●</span>Workflow<span class="k-meta">real session · 7 tool calls</span></div>
       <h2>Agent 的一条典型工作流</h2>
+      <p>从打开页面到拿到可直接粘贴的 markdown,全程无需人工介入。右侧是一次真实会话的工具调用序列。</p>
     </div>
-    <div class="flow-grid">
-      <div class="step"><div class="num"></div><h4>打开目标</h4><p>网页 / 终端 / Electron 应用,获得会话。</p></div>
-      <div class="step"><div class="num"></div><h4>定位界面</h4><p>可访问性快照确定元素与选择器。</p></div>
-      <div class="step"><div class="num"></div><h4>交互录制</h4><p>开始录制,执行点击 / 输入等演示动作。</p></div>
-      <div class="step"><div class="num"></div><h4>产出媒体</h4><p>拿到 mp4,返回体自带 markdown 引用片段。</p></div>
+    <div class="flow-demo">
+      <div class="flow-steps">
+        <div class="step" data-step="0"><div class="num"></div><div><h4>打开目标</h4><p>网页 / 终端 / Electron 应用,获得会话 id。</p></div></div>
+        <div class="step" data-step="1"><div class="num"></div><div><h4>定位界面</h4><p>可访问性快照返回元素树与选择器,Agent 自主决策。</p></div></div>
+        <div class="step" data-step="2"><div class="num"></div><div><h4>交互录制</h4><p>录制中继续点击 / 输入,所有动作进入画面。</p></div></div>
+        <div class="step" data-step="3"><div class="num"></div><div><h4>产出媒体</h4><p>统一合成 mp4 (H.264),返回体自带 markdown 引用片段。</p></div></div>
+      </div>
+      <div class="terminal-card">
+        <div class="tc-title"><span class="dot"></span>Agent 会话实录 · manta-show</div>
+        <div class="tc-progress" aria-hidden="true">
+          <span class="tick" data-step="0">打开</span>
+          <span class="tick" data-step="1">定位</span>
+          <span class="tick" data-step="2">交互</span>
+          <span class="tick" data-step="3">产出</span>
+        </div>
+        <div class="t-row t-user" data-step="0"><span class="t-who">你 ›</span><span>用 manta-show 给登录页录一段交互演示</span></div>
+        <div class="t-row" data-step="0"><span class="t-tool">browser_open</span><span class="t-out">https://app.example.com/login → web-e9f6</span></div>
+        <div class="t-row" data-step="1"><span class="t-tool">browser_snapshot</span><span class="t-out">可访问性树 · 32 个可交互元素</span></div>
+        <div class="t-row" data-step="2"><span class="t-tool">browser_record_start</span><span class="t-out">录制中…</span></div>
+        <div class="t-row" data-step="2"><span class="t-tool">browser_click</span><span class="t-arg">button.login</span></div>
+        <div class="t-row" data-step="2"><span class="t-tool">browser_type</span><span class="t-arg">input[name=email] "demo@example.com"</span></div>
+        <div class="t-row" data-step="3"><span class="t-tool">browser_record_stop</span><span class="t-out">合成 mp4…</span></div>
+        <div class="t-row ok" data-step="3"><span class="t-tool t-ok">✓ demo.mp4</span><span class="t-out">1920×1080 · H.264 · 自带可粘贴 README 的 markdown</span></div>
+      </div>
     </div>
   </div>
 </section>
 
 <div class="cta-band">
-  <h2>几分钟接入你的 Agent</h2>
-  <p>安装构建、注册 MCP Server、开口即用 —— 完整步骤与工具参考见文档。</p>
-  <a class="btn btn-primary" href="docs.html">前往文档</a>
+  <div class="container cta-inner">
+    <div class="cta-copy">
+      <h2>几分钟接入你的 Agent</h2>
+      <p>一条命令装好,自动检测本机已装的 Agent 并写好各自的 MCP 配置,开口即用。</p>
+      <div class="cta-typed" aria-hidden="true">
+        <span class="t-prompt">›</span>
+        <span id="typedText"></span><span class="t-caret"></span>
+      </div>
+      <div class="cta-links">
+        <a class="btn btn-primary" href="docs.html">前往文档</a>
+        <a class="btn btn-ghost" href="https://github.com/marrviin/manta-show">GitHub ↗</a>
+      </div>
+    </div>
+    <div class="agent-card">
+      <div class="ac-title">已支持的 AI Agent</div>
+      <div class="agent-chips">
+        <div class="agent-chip"><span class="dot"></span>Claude Code</div>
+        <div class="agent-chip"><span class="dot"></span>Cursor</div>
+        <div class="agent-chip"><span class="dot"></span>Gemini CLI</div>
+        <div class="agent-chip"><span class="dot"></span>Codex</div>
+      </div>
+      <div class="ac-note">$ npx @manta-show/mcp init &nbsp;# 自动注册进上述配置</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -203,12 +244,101 @@
       setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1600);
     });
   });
+
+  // CTA 打字机:循环打出对 Agent 说的一句话
+  (() => {
+    const el = document.getElementById('typedText');
+    if (!el) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = '用 manta-show 给登录页录一段交互演示';
+      return;
+    }
+    const lines = [
+      '用 manta-show 给登录页录一段交互演示',
+      '用 manta-show 截一张设置页的组件图',
+      '用 manta-show 录一下这个 CLI 的 --help',
+    ];
+    let li = 0, ci = 0, deleting = false;
+    function tick() {
+      const line = lines[li];
+      ci += deleting ? -1 : 1;
+      el.textContent = line.slice(0, ci);
+      let delay = deleting ? 26 : 62;
+      if (!deleting && ci === line.length) { delay = 2100; deleting = true; }
+      else if (deleting && ci === 0) { deleting = false; li = (li + 1) % lines.length; delay = 420; }
+      setTimeout(tick, delay);
+    }
+    tick();
+  })();
+
+  // Workflow 滚动驱动:右侧实录卡常驻,左侧步骤进入视口时推进实录
+  (() => {
+    const steps = [...document.querySelectorAll('.flow-steps .step')];
+    if (!steps.length) return;
+    const ticks = [...document.querySelectorAll('.tc-progress .tick')];
+    const rows = [...document.querySelectorAll('.terminal-card .t-row')];
+    const fine = matchMedia('(min-width: 901px) and (prefers-reduced-motion: no-preference)').matches;
+    if (!fine) {
+      steps.forEach(s => s.classList.add('live'));
+      ticks.forEach(t => t.classList.add('on'));
+      return;
+    }
+    const apply = (active) => {
+      steps.forEach((s, i) => s.classList.toggle('live', i === active));
+      ticks.forEach((t, i) => {
+        t.classList.toggle('on', i <= active);
+        t.classList.toggle('cur', i === active);
+      });
+      rows.forEach(r => r.classList.toggle('lit', Number(r.dataset.step) <= active));
+    };
+    const io = new IntersectionObserver(entries => {
+      for (const e of entries) if (e.isIntersecting) apply(Number(e.target.dataset.step));
+    }, { rootMargin: '-42% 0px -42% 0px' });
+    steps.forEach(s => io.observe(s));
+    apply(0);
+  })();
+  // Capabilities 滚动驱动:左侧叙述卡进入视口推进右侧重叠视频舞台,编号胶囊可点按切换
+  (() => {
+    const scroller = document.querySelector('.cap-scroller');
+    if (!scroller) return;
+    const steps = [...scroller.querySelectorAll('.cap-step')];
+    const layers = [...scroller.querySelectorAll('.cap-layer')];
+    const dots = [...scroller.querySelectorAll('.cap-dot')];
+    const caption = scroller.querySelector('.cap-caption');
+    const captions = ['网页交互录制', '终端命令录制', 'Electron 应用录制'];
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let active = -1;
+    const apply = (i) => {
+      if (i === active || !steps[i]) return;
+      active = i;
+      steps.forEach((s, k) => s.classList.toggle('live', k === i));
+      layers.forEach((l, k) => {
+        const on = k === i;
+        l.classList.toggle('on', on);
+        const v = l.querySelector('video');
+        if (!v) return;
+        if (on) v.play().catch(() => {});
+        else v.pause();
+      });
+      dots.forEach((d, k) => d.classList.toggle('is-on', k === i));
+      if (caption) caption.textContent = captions[i];
+    };
+    const io = new IntersectionObserver(entries => {
+      for (const e of entries) if (e.isIntersecting) apply(Number(e.target.dataset.lane));
+    }, { rootMargin: '-38% 0px -38% 0px' });
+    steps.forEach(s => io.observe(s));
+    dots.forEach(d => d.addEventListener('click', () => {
+      apply(Number(d.dataset.lane));
+      steps[Number(d.dataset.lane)].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    }));
+    apply(0);
+  })();
 </script>
 
 <footer>
   <div class="container">
     <div class="foot-inner">
-      <span>🪁 <a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
+      <span><a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
       <span><a href="index.html#features">特性</a> · <a href="index.html#capabilities">能力</a> · <a href="docs.html">文档</a></span>
     </div>
   </div>

@@ -1,4 +1,5 @@
 import { chromium, type Browser } from 'playwright';
+import { t } from '../i18n/index.js';
 
 let browserPromise: Promise<Browser> | null = null;
 
@@ -11,7 +12,7 @@ export function getBrowser(): Promise<Browser> {
     .launch({ headless: true, channel: 'chromium' })
     .catch((e) => {
       browserPromise = null;
-      throw new Error(`启动 Chromium 失败：${e.message}。请先运行 npx playwright install chromium`);
+      throw new Error(t('browser.launchFail', { message: e.message }));
     });
   return browserPromise;
 }

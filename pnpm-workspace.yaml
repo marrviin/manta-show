@@ -5,7 +5,6 @@ packages:
 allowBuilds:
   electron: true
   esbuild: true
-  ffmpeg-static: true
   "@manta-show/node-pty": true
 
 minimumReleaseAgeExclude:
@@ -15,10 +14,14 @@ minimumReleaseAgeExclude:
   - '@manta-show/node-pty-linux-arm64@1.1.0-beta34.3 || 1.1.0-beta34.4'
   - '@manta-show/node-pty-linux-x64@1.1.0-beta34.3 || 1.1.0-beta34.4'
   - '@manta-show/node-pty-win32-x64@1.1.0-beta34.3 || 1.1.0-beta34.4'
+  - '@manta-show/ffmpeg-darwin-arm64@6.1.1'
+  - '@manta-show/ffmpeg-darwin-x64@6.1.1'
+  - '@manta-show/ffmpeg-linux-arm64@6.1.1'
+  - '@manta-show/ffmpeg-linux-x64@6.1.1'
+  - '@manta-show/ffmpeg-win32-x64@6.1.1'
 
 onlyBuiltDependencies:
   - electron
   - "@manta-show/node-pty"
   - playwright
   - esbuild
-  - ffmpeg-static

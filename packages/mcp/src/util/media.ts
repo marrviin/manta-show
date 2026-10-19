@@ -3,14 +3,17 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 
-/** Media output directory: MANTA_SHOW_OUTPUT takes priority, defaults to ~/.manta-show under the user home */
+/**
+ * Media output directory: fixed at ~/.manta-show/media (next to the managed bin/ dir) so all
+ * artifacts land in one predictable place for `manta-show recordings` / `clean` to manage.
+ */
 export function outputDir(): string {
-  const dir = process.env.MANTA_SHOW_OUTPUT || path.join(homedir(), '.manta-show');
+  const dir = path.join(homedir(), '.manta-show', 'media');
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
 
-/** Generate a collision-free output file path, e.g. /abs/.manta-show/video-2026-10-16T10-00-00-000Z-a1b2.mp4 */
+/** Generate a collision-free output file path, e.g. /abs/.manta-show/media/web-video-...-a1b2.mp4 */
 export function mediaPath(kind: string, ext: string): string {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const name = `${kind}-${stamp}-${randomBytes(3).toString('hex')}.${ext}`;

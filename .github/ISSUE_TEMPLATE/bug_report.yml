@@ -1,0 +1,44 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the exact tool call and the full error/result text if you have it.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. browser_open …
+        2. browser_record_start …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: manta-show version
+      placeholder: "0.0.7"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS / arch / Node
+      placeholder: macOS 26 arm64, Node 22
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: doctor output
+      description: Run `manta-show doctor` and paste the check table.
+  - type: textarea
+    id: context
+    attributes:
+      label: Which MCP client?
+      description: Claude Code / Cursor / other, and how the server is configured (npx / global install / from source).
