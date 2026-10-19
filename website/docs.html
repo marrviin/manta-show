@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>文档 — manta-show</title>
-<meta name="description" content="manta-show 安装、接入与工具参考文档。" />
+<title>Docs — manta-show</title>
+<meta name="description" content="manta-show installation, integration and tool reference." />
 <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-i18n-title="title.docs" data-i18n-desc="desc.docs">
 
 <nav>
   <div class="container nav-inner">
     <a class="logo" href="index.html"><span class="logo-mark"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 19 9l-7 6-7-6 7-7z"/><path d="M12 15v4"/><path d="M12 19c0 1.6-1.6 2.6-3.2 2.6"/></svg></span>manta-show</a>
     <div class="nav-right">
       <div class="nav-links">
-        <a href="index.html#features">特性</a>
-        <a href="index.html#capabilities">能力</a>
-        <a href="docs.html" class="active">文档</a>
+        <a href="index.html#features" data-i18n="nav.features">特性</a>
+        <a href="index.html#capabilities" data-i18n="nav.capabilities">能力</a>
+        <a href="docs.html" class="active" data-i18n="nav.docs">文档</a>
       </div>
+      <button class="lang-btn" type="button" aria-label="Switch language"></button>
       <a class="gh-btn" href="https://github.com/marrviin/manta-show" aria-label="GitHub" title="GitHub">
         <svg viewBox="0 0 16 16" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
       </a>
@@ -27,65 +28,65 @@
 
 <div class="container docs-layout">
   <aside class="docs-sidebar">
-    <div class="side-title">开始</div>
-    <a href="#intro">简介</a>
-    <a href="#install">安装</a>
-    <a href="#mcp">接入 MCP 客户端</a>
-    <div class="side-title">工具参考</div>
-    <a href="#browser">网页捕获</a>
-    <a href="#terminal">终端捕获</a>
-    <a href="#electron">Electron 捕获</a>
-    <div class="side-title">进阶</div>
-    <a href="#video">视频输出规格</a>
-    <a href="#session">会话模型</a>
-    <a href="#dev">开发与测试</a>
-    <a href="#security">安全说明</a>
+    <div class="side-title" data-i18n="d.side.start">开始</div>
+    <a href="#intro" data-i18n="d.side.intro">简介</a>
+    <a href="#install" data-i18n="d.side.install">安装</a>
+    <a href="#mcp" data-i18n="d.side.mcp">接入 MCP 客户端</a>
+    <div class="side-title" data-i18n="d.side.tools">工具参考</div>
+    <a href="#browser" data-i18n="d.side.browser">网页捕获</a>
+    <a href="#terminal" data-i18n="d.side.terminal">终端捕获</a>
+    <a href="#electron" data-i18n="d.side.electron">Electron 捕获</a>
+    <div class="side-title" data-i18n="d.side.adv">进阶</div>
+    <a href="#video" data-i18n="d.side.video">视频输出规格</a>
+    <a href="#session" data-i18n="d.side.session">会话模型</a>
+    <a href="#dev" data-i18n="d.side.dev">开发与测试</a>
+    <a href="#security" data-i18n="d.side.security">安全说明</a>
   </aside>
 
   <main class="doc-body">
 
     <section class="doc-section" id="intro">
-      <h2>简介</h2>
-      <p>manta-show 是为 AI Agent(Cursor、Claude Code 等)定制的全场景产品媒体捕获 MCP Server。通过代码级控制,自动为<b>网页、Electron 桌面应用、CLI 工具</b>生成高画质截图与视频(mp4),用于快速补齐网站和 README 文档。</p>
+      <h2 data-i18n="d.intro.h">简介</h2>
+      <p data-i18n="d.intro.p">manta-show 是为 AI Agent(Cursor、Claude Code 等)定制的全场景产品媒体捕获 MCP Server。通过代码级控制,自动为<b>网页、Electron 桌面应用、CLI 工具</b>生成高画质截图与视频(mp4),用于快速补齐网站和 README 文档。</p>
       <ul>
-        <li>零 OS 级录屏 —— 全部通过 Chromium 渲染层(Playwright / CDP)采集,无屏幕录制权限、无窗口抖动,CI 可跑</li>
-        <li>零侵入 CLI 捕获 —— node-pty 拦截 TTY 文本流,在 xterm.js 回放页中渲染后录制,产出 mp4</li>
-        <li>统一媒体管线 —— 所有视频统一为 mp4 (H.264, yuv420p);截图直接以 MCP image content 返回</li>
-        <li>面向 Agent 设计 —— 会话式细粒度工具、可恢复的错误提示、返回体自带 markdown 引用片段</li>
+        <li data-i18n="d.intro.l1">零 OS 级录屏 —— 全部通过 Chromium 渲染层(Playwright / CDP)采集,无屏幕录制权限、无窗口抖动,CI 可跑</li>
+        <li data-i18n="d.intro.l2">零侵入 CLI 捕获 —— node-pty 拦截 TTY 文本流,在 xterm.js 回放页中渲染后录制,产出 mp4</li>
+        <li data-i18n="d.intro.l3">统一媒体管线 —— 所有视频统一为 mp4 (H.264, yuv420p);截图直接以 MCP image content 返回</li>
+        <li data-i18n="d.intro.l4">面向 Agent 设计 —— 会话式细粒度工具、可恢复的错误提示、返回体自带 markdown 引用片段</li>
       </ul>
     </section>
 
     <section class="doc-section" id="install">
-      <h2>安装</h2>
-      <p>要求:Node ≥ 20、pnpm。</p>
-      <div class="code-label">安装与构建</div>
-      <pre><span class="c"># postinstall 会自动执行 playwright install chromium</span>
+      <h2 data-i18n="d.install.h">安装</h2>
+      <p data-i18n="d.install.p">要求:Node ≥ 20、pnpm。</p>
+      <div class="code-label" data-i18n="d.install.label">安装与构建</div>
+      <pre><span class="c" data-i18n="d.install.cmt"># postinstall 会自动执行 playwright install chromium</span>
 git clone &lt;this-repo&gt; &amp;&amp; cd manta-show
 pnpm install
 pnpm build</pre>
-      <div class="callout">
+      <div class="callout" data-i18n="d.install.callout">
         <b>node-pty 说明:</b>CLI 捕获依赖 node-pty(native 模块)。macOS 26 上 1.1.0 正式版有 <code>posix_spawnp failed</code> 兼容问题,本仓库固定使用 <code>1.1.0-beta34</code>。pnpm 安装时如提示构建脚本许可,确认 <code>allowBuilds</code> 中的 electron / node-pty 为 true(见 <code>pnpm-workspace.yaml</code>)。
       </div>
-      <h3>ffmpeg</h3>
-      <p>录制视频需要 ffmpeg,按以下顺序自动定位:</p>
+      <h3 data-i18n="d.install.ffmpeg">ffmpeg</h3>
+      <p data-i18n="d.install.ffmpeg.p">录制视频需要 ffmpeg,按以下顺序自动定位:</p>
       <ul>
-        <li>环境变量 <code>MANTA_SHOW_FFMPEG</code> 指定的路径</li>
-        <li>PATH 上的 ffmpeg</li>
-        <li><code>~/.manta-show/bin</code>(init/doctor 下载)</li>
-        <li>依赖自带的预编译平台包 <code>@manta-show/ffmpeg-&lt;platform&gt;-&lt;arch&gt;</code>(无 install 脚本,npm 12 默认屏蔽依赖脚本不影响)</li>
+        <li data-i18n="d.install.ffmpeg.l1">环境变量 <code>MANTA_SHOW_FFMPEG</code> 指定的路径</li>
+        <li data-i18n="d.install.ffmpeg.l2">PATH 上的 ffmpeg</li>
+        <li data-i18n="d.install.ffmpeg.l3"><code>~/.manta-show/bin</code>(init/doctor 下载)</li>
+        <li data-i18n="d.install.ffmpeg.l4">依赖自带的预编译平台包 <code>@manta-show/ffmpeg-&lt;platform&gt;-&lt;arch&gt;</code>(无 install 脚本,npm 12 默认屏蔽依赖脚本不影响)</li>
       </ul>
-      <div class="callout">
+      <div class="callout" data-i18n="d.install.net">
         <b>网络受限环境:</b>内置 ffmpeg 随 npm 包分发(npmmirror 自动镜像),安装无需访问 GitHub;仅在平台包未覆盖的环境上,跑一次 <code>manta-show doctor</code> 会自动从 npmmirror 镜像下载 ffmpeg 到 <code>~/.manta-show/bin</code>。
       </div>
-      <div class="callout warn">
+      <div class="callout warn" data-i18n="d.install.warn">
         <b>注意:</b>Playwright 自带的 ffmpeg 是裁剪版(无 libx264),不能用于本项目。
       </div>
     </section>
 
     <section class="doc-section" id="mcp">
-      <h2>接入 MCP 客户端</h2>
-      <p>Claude Code 在项目级 <code>.mcp.json</code> 或 <code>~/.claude.json</code> 中配置;Cursor 在 <code>~/.cursor/mcp.json</code> 中使用同样结构。</p>
-      <div class="callout">
+      <h2 data-i18n="d.mcp.h">接入 MCP 客户端</h2>
+      <p data-i18n="d.mcp.p">Claude Code 在项目级 <code>.mcp.json</code> 或 <code>~/.claude.json</code> 中配置;Cursor 在 <code>~/.cursor/mcp.json</code> 中使用同样结构。</p>
+      <div class="callout" data-i18n="d.mcp.lazy">
         <b>懒人方式:</b>运行 <code>manta-show init</code>,自动检测已安装的 AI Agent(Claude Code、Cursor、Gemini CLI、Codex)并写入配置,随后完成环境准备:检测 Chromium / ffmpeg,缺失项一次性确认后<b>带下载进度</b>自动安装(走 npmmirror 镜像加速);遇到问题用 <code>manta-show doctor</code> 体检修复(含可选依赖如容器运行时的检查与安装指引)。
       </div>
       <pre>{
@@ -96,128 +97,128 @@ pnpm build</pre>
     }
   }
 }</pre>
-      <div class="callout">
+      <div class="callout" data-i18n="d.mcp.global">
         <b>全局安装过</b>(<code>npm install -g @manta-show/mcp</code>):<code>command</code> 可直接用 <code>manta-show</code>、<code>args</code> 留空。从源码开发时,改为 <code>command: "node"</code> 指向 <code>packages/mcp/dist/index.js</code> 本地构建产物。环境变量均可不配,按需设置(见下表)。
       </div>
-      <h3>环境变量(均可不配,按需设置)</h3>
+      <h3 data-i18n="d.mcp.env">环境变量(均可不配,按需设置)</h3>
       <table>
-        <tr><th>变量</th><th>默认</th><th>说明</th></tr>
-        <tr><td>MANTA_SHOW_FFMPEG</td><td>自动定位</td><td>指定 ffmpeg 可执行文件路径</td></tr>
+        <tr><th data-i18n="d.mcp.th1">变量</th><th data-i18n="d.mcp.th2">默认</th><th data-i18n="d.mcp.th3">说明</th></tr>
+        <tr><td>MANTA_SHOW_FFMPEG</td><td data-i18n="d.mcp.env1d">自动定位</td><td data-i18n="d.mcp.env1t">指定 ffmpeg 可执行文件路径</td></tr>
       </table>
     </section>
 
     <section class="doc-section" id="browser">
-      <h2>网页捕获</h2>
-      <p>基于 Playwright Chromium,无头运行,默认 2x 高清渲染(deviceScaleFactor=2,视口 1440×810)。</p>
+      <h2 data-i18n="d.browser.h">网页捕获</h2>
+      <p data-i18n="d.browser.p">基于 Playwright Chromium,无头运行,默认 2x 高清渲染(deviceScaleFactor=2,视口 1440×810)。</p>
       <table>
-        <tr><th>工具</th><th>说明</th></tr>
-        <tr><td>browser_open</td><td>打开网页,返回 sessionId(url, width=1440, height=810, deviceScaleFactor=2)</td></tr>
-        <tr><td>browser_navigate</td><td>会话内跳转</td></tr>
-        <tr><td>browser_snapshot</td><td>可访问性树快照,用于确定选择器</td></tr>
-        <tr><td>browser_click / browser_hover</td><td>按选择器点击 / 悬停(支持 CSS / text= / role= 等)</td></tr>
-        <tr><td>browser_type</td><td>输入文本(可选回车提交)</td></tr>
-        <tr><td>browser_press_key / browser_scroll</td><td>按键 / 滚动</td></tr>
-        <tr><td>browser_evaluate</td><td>在页面执行 JS 表达式</td></tr>
-        <tr><td>browser_screenshot</td><td>截图(<code>selector</code> 元素级裁剪,<code>fullPage</code> 整页),返回图片 + 路径</td></tr>
-        <tr><td>browser_record_start / browser_record_stop</td><td>录制期间继续交互,stop 产出 mp4;start 传 steps 可批量执行编排动作并自动出片;见下方装饰选项</td></tr>
-        <tr><td>browser_close</td><td>关闭会话</td></tr>
+        <tr><th data-i18n="d.browser.th1">工具</th><th data-i18n="d.browser.th2">说明</th></tr>
+        <tr><td>browser_open</td><td data-i18n="d.browser.t1">打开网页,返回 sessionId(url, width=1440, height=810, deviceScaleFactor=2)</td></tr>
+        <tr><td>browser_navigate</td><td data-i18n="d.browser.t2">会话内跳转</td></tr>
+        <tr><td>browser_snapshot</td><td data-i18n="d.browser.t3">可访问性树快照,用于确定选择器</td></tr>
+        <tr><td>browser_click / browser_hover</td><td data-i18n="d.browser.t4">按选择器点击 / 悬停(支持 CSS / text= / role= 等)</td></tr>
+        <tr><td>browser_type</td><td data-i18n="d.browser.t5">输入文本(可选回车提交)</td></tr>
+        <tr><td>browser_press_key / browser_scroll</td><td data-i18n="d.browser.t6">按键 / 滚动</td></tr>
+        <tr><td>browser_evaluate</td><td data-i18n="d.browser.t7">在页面执行 JS 表达式</td></tr>
+        <tr><td>browser_screenshot</td><td data-i18n="d.browser.t8">截图(<code>selector</code> 元素级裁剪,<code>fullPage</code> 整页),返回图片 + 路径</td></tr>
+        <tr><td>browser_record_start / browser_record_stop</td><td data-i18n="d.browser.t9">录制期间继续交互,stop 产出 mp4;start 传 steps 可批量执行编排动作并自动出片;见下方装饰选项</td></tr>
+        <tr><td>browser_close</td><td data-i18n="d.browser.t10">关闭会话</td></tr>
       </table>
-      <h3>装饰选项</h3>
-      <p><code>browser_record_stop</code> 的 <code>decorate</code> 参数:</p>
+      <h3 data-i18n="d.browser.dec">装饰选项</h3>
+      <p data-i18n="d.browser.dec.p"><code>browser_record_stop</code> 的 <code>decorate</code> 参数:</p>
       <ul>
-        <li><code>'browser'</code>(默认)—— 叠加 macOS 浏览器窗框(红绿灯 + 真实 URL 地址栏 + 圆角投影)</li>
-        <li><code>'none'</code> —— 原始画面</li>
+        <li data-i18n="d.browser.dec.l1"><code>'browser'</code>(默认)—— 叠加 macOS 浏览器窗框(红绿灯 + 真实 URL 地址栏 + 圆角投影)</li>
+        <li data-i18n="d.browser.dec.l2"><code>'none'</code> —— 原始画面</li>
       </ul>
-      <h3>典型流程</h3>
-      <pre>browser_open → browser_snapshot 找选择器
+      <h3 data-i18n="d.browser.flow">典型流程</h3>
+      <pre data-i18n="d.browser.flow.pre">browser_open → browser_snapshot 找选择器
 → browser_click / browser_type 交互
 → browser_record_start → 演示动作 → browser_record_stop 拿 mp4
 → 把返回体中的 markdown 引用片段插入 README</pre>
     </section>
 
     <section class="doc-section" id="terminal">
-      <h2>终端捕获</h2>
-      <p>基于 node-pty + xterm.js 回放页,对被录程序零侵入。</p>
+      <h2 data-i18n="d.term.h">终端捕获</h2>
+      <p data-i18n="d.term.p">基于 node-pty + xterm.js 回放页,对被录程序零侵入。</p>
       <table>
-        <tr><th>工具</th><th>说明</th></tr>
-        <tr><td>terminal_open</td><td>启动命令并<b>自动开始录制</b>(command, args, cwd, env, isolation, image, cols=120, rows=30);<code>isolation: 'container'</code> 在一次性 Docker 容器中运行,与宿主完全隔离、退出即销毁,重复演示始终是真实的首次执行</td></tr>
-        <tr><td>terminal_read</td><td>读最近 N 行渲染后纯文本(去 ANSI),Agent 判断状态用</td></tr>
-        <tr><td>terminal_send / terminal_send_key</td><td>输入文本 / 具名按键(enter、ctrl+c、上下左右……)</td></tr>
-        <tr><td>terminal_wait</td><td>阻塞等待输出中出现指定文本(子串匹配)或超时,附最近输出——比反复 terminal_read 轮询省轮次</td></tr>
-        <tr><td>terminal_record_stop</td><td>导出 mp4</td></tr>
-        <tr><td>terminal_stop / terminal_close</td><td>结束进程 / 释放会话</td></tr>
+        <tr><th data-i18n="d.browser.th1">工具</th><th data-i18n="d.browser.th2">说明</th></tr>
+        <tr><td>terminal_open</td><td data-i18n="d.term.t1">启动命令并<b>自动开始录制</b>(command, args, cwd, env, isolation, image, cols=120, rows=30);<code>isolation: 'container'</code> 在一次性 Docker 容器中运行,与宿主完全隔离、退出即销毁,重复演示始终是真实的首次执行</td></tr>
+        <tr><td>terminal_read</td><td data-i18n="d.term.t2">读最近 N 行渲染后纯文本(去 ANSI),Agent 判断状态用</td></tr>
+        <tr><td>terminal_send / terminal_send_key</td><td data-i18n="d.term.t3">输入文本 / 具名按键(enter、ctrl+c、上下左右……)</td></tr>
+        <tr><td>terminal_wait</td><td data-i18n="d.term.t4">阻塞等待输出中出现指定文本(子串匹配)或超时,附最近输出——比反复 terminal_read 轮询省轮次</td></tr>
+        <tr><td>terminal_record_stop</td><td data-i18n="d.term.t5">导出 mp4</td></tr>
+        <tr><td>terminal_stop / terminal_close</td><td data-i18n="d.term.t6">结束进程 / 释放会话</td></tr>
       </table>
-      <div class="callout">
+      <div class="callout" data-i18n="d.term.c1">
         <b>两种用法,语义不同:</b><code>open</code> 直接运行命令(如 <code>command: "npm"</code>)只录输出,命令本身不出现在画面中,适合一次性 CLI / CI 场景;要演示"命令被敲入并执行",先 <code>open</code> 交互 shell(<code>bash -i</code>)再用 <code>terminal_send</code> 发送命令,输入由 TTY 回显进画面,效果与真人操作一致。按命令行为选隔离:自包含命令(安装、构建、demo CLI)和操作某个项目目录的命令(scaffold、build、lint 等,<code>cwd</code> 指向样例项目即可,产物落回宿主)用 <code>isolation: 'container'</code>,既真实又可复现,且不会把真实项目/配置录进画面;读写用户真实环境的命令(如 init 写 ~/.claude.json)必须在宿主运行,重复演示可用 <code>env: { HOME: "/tmp/demo-home" }</code> 指向预构造标记文件的一次性目录,不碰真实配置。
       </div>
-      <div class="callout">
+      <div class="callout" data-i18n="d.term.c2">
         <b>重复演示与状态隔离:</b>CLI 的所有状态都落在文件系统上,重复录制同一条命令会因上次残留(已安装、文件已存在、缓存命中)而走样。<code>terminal_open</code> 传 <code>isolation: 'container'</code>(配 <code>image</code> 锁版本,如 <code>node:22</code>)即可让命令在一次性 Docker 容器中运行:与 CI 的临时环境同一机制,命令及其全部状态变化与宿主完全隔离,容器退出即销毁,每次录制都是真实的首次执行,宿主零污染。传 <code>cwd</code> 时该目录挂载到容器 /workspace(CLI 生成的文件可从宿主查看),不传则容器文件系统自包含。需要本机有 Docker 或 Podman(macOS 推荐 OrbStack / colima;<code>manta-show doctor</code> 会检查并给出安装指引)。
       </div>
-      <div class="callout">
+      <div class="callout" data-i18n="d.term.c3">
         <b>容器环境按场景定制</b>(<code>isolation: 'container'</code> 时):运行时用 <code>image</code>(python:3.12、golang:1.22…);模拟项目文件在宿主准备夹具目录后传 <code>cwd</code>;注入模拟的全局配置用 <code>volumes</code>(docker 语法,如 /tmp/demo-gitconfig:/root/.gitconfig);容器内预装依赖、造文件用交互 shell(bash -i + terminal_send),这些准备动作本身也是可录制的演示内容。
       </div>
-      <h3>装饰选项</h3>
-      <p><code>terminal_open</code> 的 <code>decorate</code> 参数:</p>
+      <h3 data-i18n="d.term.dec">装饰选项</h3>
+      <p data-i18n="d.term.dec.p"><code>terminal_open</code> 的 <code>decorate</code> 参数:</p>
       <ul>
-        <li><code>'terminal'</code>(默认)—— 叠加终端窗口装饰(红绿灯 + 以命令为标题的标题栏)</li>
-        <li><code>'none'</code> —— 原始画面</li>
+        <li data-i18n="d.term.dec.l1"><code>'terminal'</code>(默认)—— 叠加终端窗口装饰(红绿灯 + 以命令为标题的标题栏)</li>
+        <li data-i18n="d.term.dec.l2"><code>'none'</code> —— 原始画面</li>
       </ul>
     </section>
 
     <section class="doc-section" id="electron">
-      <h2>Electron 捕获</h2>
-      <p>基于 Playwright <code>_electron</code> API。</p>
+      <h2 data-i18n="d.elec.h">Electron 捕获</h2>
+      <p data-i18n="d.elec.p">基于 Playwright <code>_electron</code> API。</p>
       <table>
-        <tr><th>工具</th><th>说明</th></tr>
-        <tr><td>electron_launch</td><td>启动应用并捕获主窗口(app 为应用目录或入口 js)</td></tr>
-        <tr><td>electron_snapshot</td><td>界面可访问性快照</td></tr>
-        <tr><td>electron_click / electron_type / electron_press_key</td><td>界面交互</td></tr>
-        <tr><td>electron_screenshot</td><td>窗口 / 元素截图</td></tr>
-        <tr><td>electron_record_start / electron_record_stop</td><td>录制 / 导出 mp4;start 传 steps 可批量执行动作并自动出片;见下方装饰选项</td></tr>
-        <tr><td>electron_close</td><td>关闭应用</td></tr>
+        <tr><th data-i18n="d.browser.th1">工具</th><th data-i18n="d.browser.th2">说明</th></tr>
+        <tr><td>electron_launch</td><td data-i18n="d.elec.t1">启动应用并捕获主窗口(app 为应用目录或入口 js)</td></tr>
+        <tr><td>electron_snapshot</td><td data-i18n="d.elec.t2">界面可访问性快照</td></tr>
+        <tr><td>electron_click / electron_type / electron_press_key</td><td data-i18n="d.elec.t3">界面交互</td></tr>
+        <tr><td>electron_screenshot</td><td data-i18n="d.elec.t4">窗口 / 元素截图</td></tr>
+        <tr><td>electron_record_start / electron_record_stop</td><td data-i18n="d.elec.t5">录制 / 导出 mp4;start 传 steps 可批量执行动作并自动出片;见下方装饰选项</td></tr>
+        <tr><td>electron_close</td><td data-i18n="d.elec.t6">关闭应用</td></tr>
       </table>
-      <h3>装饰选项</h3>
-      <p><code>electron_record_stop</code> 的 <code>decorate</code> 参数:</p>
+      <h3 data-i18n="d.elec.dec">装饰选项</h3>
+      <p data-i18n="d.elec.dec.p"><code>electron_record_stop</code> 的 <code>decorate</code> 参数:</p>
       <ul>
-        <li><code>'desktop'</code>(默认)—— 叠加 macOS 桌面装饰:窗口带圆角投影放在桌面壁纸上(无标题栏)。壁纸取自 macOS 26 (Tahoe) 官方壁纸,为 Apple 版权图像,仅供内部演示使用</li>
-        <li><code>'none'</code> —— 原始画面</li>
+        <li data-i18n="d.elec.dec.l1"><code>'desktop'</code>(默认)—— 叠加 macOS 桌面装饰:窗口带圆角投影放在桌面壁纸上(无标题栏)。壁纸取自 macOS 26 (Tahoe) 官方壁纸,为 Apple 版权图像,仅供内部演示使用</li>
+        <li data-i18n="d.elec.dec.l2"><code>'none'</code> —— 原始画面</li>
       </ul>
     </section>
 
     <section class="doc-section" id="video">
-      <h2>视频输出规格</h2>
-      <p>三类录制默认统一输出 <b>1920×1080(16:9)</b>:等比缩放后居中补边(浏览器白底、终端深色底)。</p>
+      <h2 data-i18n="d.video.h">视频输出规格</h2>
+      <p data-i18n="d.video.p">三类录制默认统一输出 <b>1920×1080(16:9)</b>:等比缩放后居中补边(浏览器白底、终端深色底)。</p>
       <ul>
-        <li>编码统一为 <code>mp4 (H.264, yuv420p)</code></li>
-        <li>录制中可以继续交互,stop 时一次性产出 mp4</li>
-        <li><code>*_record_stop</code> 传 <code>fit: 'native'</code> 可保持录制原始尺寸</li>
+        <li data-i18n="d.video.l1">编码统一为 <code>mp4 (H.264, yuv420p)</code></li>
+        <li data-i18n="d.video.l2">录制中可以继续交互,stop 时一次性产出 mp4</li>
+        <li data-i18n="d.video.l3"><code>*_record_stop</code> 传 <code>fit: 'native'</code> 可保持录制原始尺寸</li>
       </ul>
     </section>
 
     <section class="doc-section" id="session">
-      <h2>会话模型</h2>
+      <h2 data-i18n="d.session.h">会话模型</h2>
       <ul>
-        <li>所有交互工具接受可选 <code>sessionId</code></li>
-        <li>不填时操作<b>该类型最近活跃的会话</b>,Agent 通常不需要手动传</li>
-        <li>会话空闲 10 分钟自动回收</li>
+        <li data-i18n="d.session.l1">所有交互工具接受可选 <code>sessionId</code></li>
+        <li data-i18n="d.session.l2">不填时操作<b>该类型最近活跃的会话</b>,Agent 通常不需要手动传</li>
+        <li data-i18n="d.session.l3">会话空闲 10 分钟自动回收</li>
       </ul>
     </section>
 
     <section class="doc-section" id="dev">
-      <h2>开发与测试</h2>
+      <h2 data-i18n="d.dev.h">开发与测试</h2>
       <table>
-        <tr><th>命令</th><th>说明</th></tr>
-        <tr><td>pnpm dev</td><td>tsc --watch</td></tr>
-        <tr><td>pnpm test</td><td>构建 + e2e(InMemoryTransport 直连,覆盖三条线)</td></tr>
-        <tr><td>pnpm test:unify</td><td>统一输出规格的压力测试</td></tr>
-        <tr><td>pnpm start</td><td>stdio 方式启动 server</td></tr>
+        <tr><th data-i18n="d.dev.th1">命令</th><th data-i18n="d.dev.th2">说明</th></tr>
+        <tr><td>pnpm dev</td><td data-i18n="d.dev.t1">tsc --watch</td></tr>
+        <tr><td>pnpm test</td><td data-i18n="d.dev.t2">构建 + e2e(InMemoryTransport 直连,覆盖三条线)</td></tr>
+        <tr><td>pnpm test:unify</td><td data-i18n="d.dev.t3">统一输出规格的压力测试</td></tr>
+        <tr><td>pnpm start</td><td data-i18n="d.dev.t4">stdio 方式启动 server</td></tr>
       </table>
-      <p>e2e 会真实拉起 Chromium / pty /(若安装了 electron devDependency)Electron 应用,产物校验后输出到默认输出目录(可在测试环境变量中重定向)。</p>
+      <p data-i18n="d.dev.p">e2e 会真实拉起 Chromium / pty /(若安装了 electron devDependency)Electron 应用,产物校验后输出到默认输出目录(可在测试环境变量中重定向)。</p>
     </section>
 
     <section class="doc-section" id="security">
-      <h2>安全说明</h2>
-      <div class="callout warn">
+      <h2 data-i18n="d.sec.h">安全说明</h2>
+      <div class="callout warn" data-i18n="d.sec.callout">
         <code>browser_evaluate</code> 会在页面上下文执行任意 JS,<code>terminal_open</code> 会在本机启动任意进程 —— 这是本工具的设计用途(本机开发 / 文档场景),请在信任的项目中使用。
       </div>
     </section>
@@ -228,12 +229,13 @@ pnpm build</pre>
 <footer>
   <div class="container">
     <div class="foot-inner">
-      <span><a href="https://github.com/marrviin/manta-show">manta-show</a> — MCP Server for AI agents</span>
-      <span><a href="index.html">首页</a> · <a href="docs.html">文档</a></span>
+      <span><a href="https://github.com/marrviin/manta-show">manta-show</a> — <span data-i18n="footer.tag">MCP Server for AI agents</span></span>
+      <span><a href="index.html" data-i18n="footer.home">首页</a> · <a href="docs.html" data-i18n="footer.docs">文档</a></span>
     </div>
   </div>
 </footer>
 
+<script src="i18n.js"></script>
 <script>
   // 侧边栏 scrollspy
   const links = document.querySelectorAll('.docs-sidebar a');

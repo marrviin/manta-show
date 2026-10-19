@@ -42,7 +42,8 @@ async function call(name: string, args: Record<string, unknown> = {}): Promise<C
 
 function videoPathOf(contents: Content[]): string {
   const text = contents.map((c) => c.text ?? '').join('\n');
-  const file = /视频已生成：(.+)/.exec(text)?.[1];
+  // server text is locale-dependent (zh-CN: 视频已生成 / en: Video generated) — match both
+  const file = /(?:视频已生成：|Video generated: )(.+)/.exec(text)?.[1];
   if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 300)}`);
   return file;
 }

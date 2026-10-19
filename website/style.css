@@ -66,6 +66,19 @@ nav {
   transition: border-color 0.2s, background 0.2s;
 }
 .gh-btn:hover { border-color: var(--accent); background: rgba(91, 140, 255, 0.12); }
+.lang-btn {
+  height: 34px; padding: 0 12px; border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: var(--card);
+  box-shadow: var(--glass-hi);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.lang-btn:hover { border-color: var(--accent); background: rgba(91, 140, 255, 0.12); }
 
 /* ---------- hero ---------- */
 .hero { position: relative; padding: 84px 0 72px; overflow: hidden; }
@@ -77,8 +90,8 @@ nav {
   pointer-events: none;
 }
 .hero-grid {
-  position: relative; display: grid; grid-template-columns: 11fr 10fr;
-  gap: 56px; align-items: center;
+  position: relative; display: grid; grid-template-columns: 10fr 12fr;
+  gap: 48px; align-items: center;
 }
 .hero-copy { text-align: left; }
 .hero-copy .badge-row { justify-content: flex-start; margin-bottom: 24px; }
@@ -89,40 +102,36 @@ nav {
 .hero-cta { justify-content: flex-start; margin-top: 32px; }
 
 .hero-media { position: relative; }
-.hero-media .video-frame {
-  transform: rotate(0.6deg);
+/* MacBook 边框图 + 屏幕内嵌视频
+   屏幕黑色区域实测(macbook.png 2317×1371):x 188–2144, y 4–1302,略收边避开圆角 */
+.macbook { position: relative; }
+.macbook-frame { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; }
+.macbook-screen {
+  position: absolute; z-index: 2; left: 8.8%; top: 1.8%; width: 82.9%; height: 91.5%;
+  overflow: hidden; border-radius: 8px;
+  background: #000;
 }
-.hero-media .float-card {
-  position: absolute; left: -34px; bottom: -30px; width: 210px;
-  background: rgba(22, 27, 40, 0.55); border: 1px solid var(--glass-border);
-  border-radius: 14px; padding: 14px 16px;
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  box-shadow: var(--glass-hi), 0 20px 50px rgba(0, 0, 0, 0.55);
+.macbook-screen video { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* 装饰:机身后氛围光晕 + 渐隐网格背景 */
+.macbook::before {
+  content: ""; position: absolute; inset: -14% -10% -20%; z-index: 0;
+  background:
+    radial-gradient(55% 45% at 50% 38%, rgba(91, 140, 255, 0.20), transparent 70%),
+    radial-gradient(42% 36% at 68% 56%, rgba(177, 140, 255, 0.15), transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
 }
-.hero-media .float-card .fc-title {
-  font-family: var(--mono); font-size: 11px; color: var(--accent);
-  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+.macbook::after {
+  content: ""; position: absolute; inset: -20% -14% -24%; z-index: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.24) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.24) 1px, transparent 1px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(60% 56% at 50% 46%, #000 30%, transparent 76%);
+  mask-image: radial-gradient(60% 56% at 50% 46%, #000 30%, transparent 76%);
+  pointer-events: none;
 }
-.hero-media .float-card .fc-title .dot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-}
-.hero-media .float-card .fc-row {
-  display: flex; justify-content: space-between; font-size: 12px; color: var(--muted);
-  padding: 3px 0; font-family: var(--mono);
-}
-.hero-media .float-card .fc-row b { color: var(--text); font-weight: 600; }
-.hero-media .float-badge {
-  position: absolute; right: -16px; top: -18px;
-  font-size: 12px; font-family: var(--mono); color: var(--text);
-  background: rgba(22, 27, 40, 0.55); border: 1px solid var(--glass-border);
-  padding: 7px 14px; border-radius: 999px;
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  box-shadow: var(--glass-hi), 0 12px 30px rgba(0, 0, 0, 0.5);
-}
-.hero-media .float-badge b { color: var(--accent); }
+.macbook-frame { position: relative; z-index: 1; }
 .badge {
   font-size: 12.5px; padding: 5px 12px; border-radius: 999px;
   border: 1px solid var(--glass-border); background: var(--card); color: var(--muted);
@@ -251,8 +260,23 @@ section { padding: 76px 0; }
 
 /* ---------- capabilities:三栏编辑部布局 ---------- */
 /* capabilities:左侧滚动叙事卡 + 右侧重叠视频舞台(借鉴 archify 的 sticky 舞台/焦点点亮/阶段轨) */
-.cap-scroller { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; }
-.cap-steps { display: flex; flex-direction: column; gap: 18px; }
+.cap-scroller { display: block; }
+.cap-pin { display: contents; }  /* 移动端:钉住容器透明化,回退为普通堆叠布局 */
+.cap-grid { display: flex; flex-direction: column; gap: 22px; }
+.cap-track { display: flex; flex-direction: column; gap: 18px; }
+@media (min-width: 901px) {
+  /* 桌面端:滚动到本区块即被 sticky 钉住(含标题),页面停住、滚动推进左列卡片在视频高度内移动;
+     第三张卡滚完后 sticky 释放,页面继续。区块高度即滚动行程,视频全程在视口内,无空白 */
+  .cap-scroller { height: 220vh; }
+  .cap-pin { position: sticky; top: 92px; display: block; }  /* top 由 JS 按视口动态覆盖 */
+  .cap-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; }
+  .cap-steps {
+    position: relative;      /* 卡片 offsetTop 的基准 */
+    overflow: hidden;        /* 高度由 JS 同步为舞台高度 */
+  }
+  .cap-track { will-change: transform; }
+  .cap-stage { position: static; }
+}
 .cap-step {
   border: 1px solid var(--glass-border); border-radius: 16px;
   background: var(--card); box-shadow: var(--glass-hi);
@@ -336,26 +360,23 @@ section { padding: 76px 0; }
 .video-caption { font-size: 12.5px; color: var(--muted); margin-top: 10px; text-align: center; font-family: var(--mono); }
 
 /* ---------- flow + agent transcript ---------- */
-.flow-demo { display: grid; grid-template-columns: 5fr 7fr; gap: 44px; align-items: start; }
-.flow-steps { display: flex; flex-direction: column; gap: 14px; counter-reset: step; }
-/* 滚动驱动:实录卡常驻,当前步骤卡点亮 */
+.flow-scroller { display: block; }
+.flow-pin { display: contents; }  /* 移动端:钉住容器透明化,回退为普通堆叠布局 */
+.flow-pin .terminal-card { max-width: 800px; margin: 0 auto; }
+/* 整合原左列步骤卡:进度刻度下保留一行当前步骤的标题与说明 */
+.flow-caption { position: relative; height: 54px; margin-bottom: 8px; }
+.flow-caption .fcap { position: absolute; inset: 0; opacity: 0; transition: opacity 0.35s; }
+.flow-caption .fcap.on { opacity: 1; }
+.flow-caption .fcap h4 { margin-bottom: 4px; }
+/* 滚动驱动:桌面端区块被 sticky 钉住,滚动进度推进 打开→定位→交互→产出 与实录行点亮 */
 @media (min-width: 901px) {
-  .flow-demo .terminal-card { position: sticky; top: 92px; }
-  .flow-steps .step { opacity: 0.5; transition: opacity 0.35s, border-color 0.35s, box-shadow 0.35s; }
-  .flow-steps .step.live {
-    opacity: 1;
-    border-color: rgba(91, 140, 255, 0.5);
-    box-shadow: var(--glass-hi), 0 12px 34px rgba(0, 0, 0, 0.3), 0 0 28px rgba(91, 140, 255, 0.14);
-  }
+  .flow-scroller { height: 240vh; }
+  .flow-pin { position: sticky; top: 92px; display: block; }  /* top 由 JS 按视口动态覆盖 */
 }
 @media (prefers-reduced-motion: reduce) {
-  .flow-steps .step { opacity: 1 !important; }
   .terminal-card .t-row { opacity: 1 !important; }
   .cap-step, .cap-layer, .cap-screen { transition: none; }
 }
-.flow-steps .step { display: flex; gap: 16px; align-items: flex-start; }
-.flow-steps .step .num { margin-bottom: 0; flex-shrink: 0; }
-.flow-steps .step h4 { margin-bottom: 4px; }
 .terminal-card {
   background: rgba(10, 13, 20, 0.55);
   border: 1px solid var(--glass-border); border-radius: 16px;
@@ -393,6 +414,9 @@ section { padding: 76px 0; }
 @media (max-width: 900px) {
   .terminal-card .t-row { opacity: 1; }
   .tc-progress { display: none; }
+  /* 移动端不驱动进度:四步说明纵向铺开直接展示 */
+  .flow-caption { height: auto; }
+  .flow-caption .fcap { position: static; opacity: 1; margin-bottom: 10px; }
 }
 .t-row .t-arg { color: #c9d4e8; }
 .t-row .t-out { color: var(--muted); }
@@ -400,20 +424,6 @@ section { padding: 76px 0; }
 .t-ok { color: var(--green); }
 .t-user { color: var(--text); margin-bottom: 10px; }
 .t-user .t-who { color: var(--accent); font-weight: 700; }
-.step {
-  position: relative; padding: 20px 18px; border-radius: 14px;
-  background: var(--card); border: 1px solid var(--glass-border);
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-  box-shadow: var(--glass-hi), 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-.step .num {
-  counter-increment: step; width: 34px; height: 34px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
-  display: grid; place-items: center; font-weight: 700; font-size: 14px; margin-bottom: 16px;
-}
-.step .num::before { content: counter(step); }
 .step h4 { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
 .step p { font-size: 13px; color: var(--muted); }
 .step code { font-family: var(--mono); font-size: 12px; color: #b7c5ff; background: rgba(91,140,255,0.1); padding: 1px 6px; border-radius: 5px; }
@@ -557,8 +567,6 @@ footer { border-top: 1px solid var(--border); padding: 40px 0 56px; color: var(-
   .hero-copy .badge-row { justify-content: center; }
   .hero-copy p.sub { margin-left: auto; margin-right: auto; }
   .hero-cta { justify-content: center; }
-  .hero-media .float-badge { right: 8px; }
-  .hero-media .float-card { left: 8px; }
   .cap-scroller { display: flex; flex-direction: column; gap: 22px; }
   .cap-stage-wrap { order: -1; }
   .cap-stage {
@@ -573,7 +581,6 @@ footer { border-top: 1px solid var(--border); padding: 40px 0 56px; color: var(-
   .nav-links { display: none; }
   .docs-layout { grid-template-columns: 1fr; }
   .docs-sidebar { position: static; display: none; }
-  .flow-demo { grid-template-columns: 1fr; gap: 28px; }
   .cta-inner { grid-template-columns: 1fr; gap: 32px; text-align: center; }
   .cta-links { justify-content: center; }
 }
