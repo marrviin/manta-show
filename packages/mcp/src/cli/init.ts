@@ -3,6 +3,8 @@ import { homedir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as p from '@clack/prompts';
+import { t } from '../i18n/index.js';
+import { runEnvironmentSetup } from './deps.js';
 import { printBanner } from './banner.js';
 
 type InstallResult = 'added' | 'exists';
@@ -50,7 +52,7 @@ function updateJsonMcp(
       try {
         json = JSON.parse(raw) as Record<string, unknown>;
       } catch (e) {
-        throw new Error(`配置文件解析失败：${configPath}（${e instanceof Error ? e.message : String(e)}）`);
+        throw new Error(t('init.parseFail', { path: configPath, message: e instanceof Error ? e.message : String(e) }));
       }
     }
   }
@@ -157,32 +159,33 @@ export function listAgentStatuses(): AgentStatus[] {
   }));
 }
 
-export function runInit(): void {
+export async function runInit(): Promise<void> {
   const agents = buildAgents(homedir(), mcpCommand());
 
   printBanner();
-  p.intro('为已安装的 AI Agent 配置 MCP');
+  p.intro(t('init.intro'));
   let installed = 0;
   let skipped = 0;
   for (const agent of agents) {
     if (!agent.detect()) {
-      p.log.step(`${agent.name}：未检测到，跳过`);
+      p.log.step(t('init.notDetected', { name: agent.name }));
       continue;
     }
     try {
       const result = agent.install();
       if (result === 'added') {
         installed++;
-        p.log.success(`${agent.name}：已写入 ${SERVER_NAME} MCP 配置`);
+        p.log.success(t('init.added', { name: agent.name, server: SERVER_NAME }));
       } else {
         skipped++;
-        p.log.info(`${agent.name}：已存在配置，跳过`);
+        p.log.info(t('init.exists', { name: agent.name }));
       }
     } catch (e) {
-      p.log.error(`${agent.name}：${e instanceof Error ? e.message : String(e)}`);
+      p.log.error(t('init.agentError', { name: agent.name, message: e instanceof Error ? e.message : String(e) }));
     }
   }
-  p.outro(
-    `完成：新写入 ${installed} 个，已有配置跳过 ${skipped} 个。重启对应 Agent 后即可使用 manta-show 的 MCP 工具。`,
-  );
+  p.outro(t('init.outro', { installed, skipped }));
+
+  // Continue onboarding: check the capture deps and offer to install what is missing (Chromium, ffmpeg; container runtime is info-only)
+  await runEnvironmentSetup();
 }

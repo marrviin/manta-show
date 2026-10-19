@@ -88,6 +88,81 @@ jobs:
             fi
           fi
 
+  # Repackage ffmpeg-static's static binaries as @manta-show/ffmpeg-<platform>-<arch>.
+  # The platform packages carry no lifecycle scripts, so a plain `npm install`
+  # of @manta-show/mcp keeps working where npm 12 blocks dependency install
+  # scripts (ffmpeg-static's download script would be skipped there).
+  # Same first-version OIDC caveat as build-native: publish each platform
+  # package's FIRST version once from the uploaded artifacts; afterwards CI
+  # publishes automatically.
+  build-ffmpeg:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: darwin, arch: arm64, os: macos-latest }
+          - { platform: darwin, arch: x64, os: macos-latest }
+          - { platform: linux, arch: x64, os: ubuntu-22.04 }
+          - { platform: linux, arch: arm64, os: ubuntu-22.04-arm }
+          - { platform: win32, arch: x64, os: windows-latest }
+    name: build-ffmpeg (${{ matrix.platform }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    env:
+      FFMPEG_TAG: b6.1.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Upgrade npm (OIDC publish needs >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Download and unpack ffmpeg-static binary
+        shell: bash
+        run: |
+          BIN=ffmpeg
+          if [ "${{ matrix.platform }}" = "win32" ]; then BIN=ffmpeg.exe; fi
+          # release assets are gzip-compressed; decompress on the way in
+          curl -fsSL "https://github.com/eugeneware/ffmpeg-static/releases/download/${FFMPEG_TAG}/ffmpeg-${{ matrix.platform }}-${{ matrix.arch }}.gz" | gunzip > "$BIN"
+          chmod +x "$BIN"
+
+      - name: Assemble platform package
+        # --bin omitted: pack-ffmpeg.js defaults to ffmpeg.exe / ffmpeg per host OS,
+        # which matches the matrix (each runner downloads its own platform's asset)
+        run: node scripts/pack-ffmpeg.js --out out --platform ${{ matrix.platform }} --arch ${{ matrix.arch }} --tag ${{ env.FFMPEG_TAG }}
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-${{ matrix.platform }}-${{ matrix.arch }}
+          path: out/@manta-show/*/*.tgz
+          if-no-files-found: error
+
+      - name: Publish platform package
+        if: inputs.dry_run != true
+        working-directory: out/@manta-show/ffmpeg-${{ matrix.platform }}-${{ matrix.arch }}
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "Already published: ${NAME}@${VERSION} — skipping"
+          elif ! out=$(npm publish --access public 2>&1); then
+            # A version may be invisible to `npm view` while npm's post-publish
+            # scan holds it; re-publishing then fails with E409. Treat as done.
+            if echo "$out" | grep -qE 'E409|previously (published|staged)'; then
+              echo "Version exists but is not yet visible (post-publish scan) — treating as published"
+            else
+              echo "$out" >&2
+              exit 1
+            fi
+          fi
+
   publish-fork:
     runs-on: ubuntu-latest
     # Independent of build-native: the fork tarball is platform-independent, and
@@ -119,8 +194,10 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: [publish-fork]
-    if: ${{ !cancelled() && needs.publish-fork.result == 'success' && inputs.dry_run != true }}
+    # Also gate on build-ffmpeg: the mcp package pins the ffmpeg platform
+    # packages in optionalDependencies, so publish them first.
+    needs: [publish-fork, build-ffmpeg]
+    if: ${{ !cancelled() && needs.publish-fork.result == 'success' && needs.build-ffmpeg.result == 'success' && inputs.dry_run != true }}
     steps:
       - uses: actions/checkout@v4
 

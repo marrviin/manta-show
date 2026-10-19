@@ -9,20 +9,23 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../src/server.js';
 import { outputDir } from '../src/util/media.js';
-import { getBrowser } from '../src/capture/browser.js';
-import { Recorder } from '../src/capture/recorder.js';
+import { getBrowser } from '../src/targets/browser.js';
+import { Recorder } from '../src/pipeline/recorder.js';
+import { locateFfmpeg } from '../src/deps/ffmpeg.js';
 
 type Content = { type: string; text?: string; data?: string };
 
-const require = createRequire(import.meta.url);
 const FIXTURES = path.resolve('test/fixtures');
-const FFMPEG = require('ffmpeg-static') as string;
+const FFMPEG = (await locateFfmpeg())?.path ?? null;
+if (!FFMPEG) {
+  console.error('未定位到 ffmpeg，unify-stress 需要真实 ffmpeg 解析/抽帧视频；先运行 manta-show doctor 补齐');
+  process.exit(1);
+}
 
 const { server, store } = createServer();
 const client = new Client({ name: 'manta-show-unify-stress', version: '0.0.0' });
@@ -62,7 +65,7 @@ function sessionIdOf(contents: Content[]): string {
 
 /** Extract the video path from a stop tool result body */
 function videoPathOf(contents: Content[]): string {
-  const file = /视频已生成：(.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
+  const file = /Video generated: (.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
   if (!file) throw new Error(`返回体中没有视频路径：${contents.map((c) => c.text ?? '').join(' | ').slice(0, 200)}`);
   return file;
 }

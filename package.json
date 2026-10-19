@@ -15,6 +15,7 @@
     "start": "pnpm --filter @manta-show/mcp start",
     "test": "pnpm --filter @manta-show/mcp test",
     "test:e2e": "pnpm --filter @manta-show/mcp test:e2e",
-    "test:unify": "pnpm --filter @manta-show/mcp test:unify"
+    "test:unify": "pnpm --filter @manta-show/mcp test:unify",
+    "demos": "pnpm --filter @manta-show/mcp exec tsx scripts/make-demos.mts"
   }
 }

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import * as p from '@clack/prompts';
+import { t } from '../i18n/index.js';
 import { formatBytes, outputDir, scanMediaFiles } from '../util/media.js';
 
 interface CleanOptions {
@@ -30,7 +31,7 @@ function parseArgs(args: string[]): CleanOptions {
     else if (arg === '--older-than') {
       const ms = parseDuration(args[++i] ?? '');
       if (ms === null) {
-        p.log.error('--older-than 需要一个时长参数，例如 --older-than 7d / 24h / 30m');
+        p.log.error(t('clean.needDuration'));
         process.exit(1);
       }
       opts.olderThanMs = ms;
@@ -47,17 +48,18 @@ export async function runClean(args: string[]): Promise<void> {
   // Without --all/--older-than: summary only, delete nothing
   if (!opts.all && opts.olderThanMs === undefined) {
     if (files.length === 0) {
-      p.log.info(`输出目录 ${dir} 中没有媒体产物`);
+      p.log.info(t('clean.empty', { dir }));
       return;
     }
     const total = files.reduce((sum, f) => sum + f.size, 0);
     const oldest = files[files.length - 1];
     p.log.message(
-      `输出目录 ${dir}：${files.length} 个产物，共 ${formatBytes(total)}（最早 ${new Date(oldest.mtime).toLocaleString()}）` +
-        `\n\n删除方式：` +
-        `\n  manta-show clean --older-than 7d    删除 7 天前的产物（也支持 24h / 30m）` +
-        `\n  manta-show clean --all              清空全部产物` +
-        `\n  追加 -y 跳过确认`,
+      t('clean.summary', {
+        dir,
+        count: files.length,
+        size: formatBytes(total),
+        date: new Date(oldest.mtime).toLocaleString(),
+      }),
     );
     return;
   }
@@ -65,7 +67,7 @@ export async function runClean(args: string[]): Promise<void> {
   const cutoff = opts.all ? Infinity : Date.now() - opts.olderThanMs!;
   const targets = opts.all ? files : files.filter((f) => f.mtime < cutoff);
   if (targets.length === 0) {
-    p.log.info('没有符合条件的产物，无需清理');
+    p.log.info(t('clean.nothing'));
     return;
   }
   const freed = targets.reduce((sum, f) => sum + f.size, 0);
@@ -73,14 +75,14 @@ export async function runClean(args: string[]): Promise<void> {
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
   if (!opts.yes) {
     if (!interactive) {
-      p.log.warn(`非交互环境已中止；如确认请加 -y：将删除 ${targets.length} 个产物（${formatBytes(freed)}）`);
+      p.log.warn(t('clean.aborted', { count: targets.length, size: formatBytes(freed) }));
       return;
     }
     const answer = await p.confirm({
-      message: `删除 ${targets.length} 个产物（${formatBytes(freed)}）？此操作不可恢复`,
+      message: t('clean.confirm', { count: targets.length, size: formatBytes(freed) }),
     });
     if (p.isCancel(answer) || !answer) {
-      p.cancel('已取消');
+      p.cancel(t('clean.cancelled'));
       return;
     }
   }
@@ -96,8 +98,8 @@ export async function runClean(args: string[]): Promise<void> {
     }
   }
   if (errors > 0) {
-    p.log.warn(`删除完成：${deleted} 个成功，${errors} 个失败（文件可能正被占用）`);
+    p.log.warn(t('clean.deletedWithErrors', { deleted, failed: errors }));
   } else {
-    p.outro(`已删除 ${deleted} 个产物，释放 ${formatBytes(freed)}`);
+    p.outro(t('clean.deleted', { count: deleted, size: formatBytes(freed) }));
   }
 }

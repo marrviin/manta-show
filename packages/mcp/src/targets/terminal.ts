@@ -2,7 +2,8 @@ import { spawn as ptySpawn, type IPty } from 'node-pty';
 import type { Page } from 'playwright';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { getBrowser } from '../browser.js';
+import { t } from '../i18n/index.js';
+import { getBrowser } from './browser.js';
 
 const BUFFER_CAP = 200_000;
 
@@ -64,6 +65,28 @@ export class TerminalView {
     return new TerminalView(page);
   }
 
+  /** Measured xterm cell size (CSS px), for planning a full-canvas terminal layout */
+  async cellSize(): Promise<{ w: number; h: number }> {
+    return this.page.evaluate(() => {
+      const rect = document.querySelector('.xterm-screen')!.getBoundingClientRect();
+      const term = (window as any).__term;
+      return { w: rect.width / term.cols, h: rect.height / term.rows };
+    });
+  }
+
+  /** Live-resize the terminal and re-align the viewport to the new .xterm-screen size */
+  async resize(cols: number, rows: number): Promise<void> {
+    await this.page.evaluate(
+      ({ cols, rows }) => (window as any).__term.resize(cols, rows),
+      { cols, rows },
+    );
+    const size = await this.page.evaluate(() => {
+      const rect = document.querySelector('.xterm-screen')!.getBoundingClientRect();
+      return { w: Math.ceil(rect.width), h: Math.ceil(rect.height) };
+    });
+    await this.page.setViewportSize({ width: size.w, height: size.h });
+  }
+
   write(data: string): void {
     if (process.env.MANTA_SHOW_DEBUG) {
       console.error(`[manta-show:debug] view.write ${data.length} bytes: ${JSON.stringify(data.slice(0, 40))}`);
@@ -71,7 +94,7 @@ export class TerminalView {
     void this.page
       .evaluate((d) => (window as any).__term.write(d), data)
       .catch((e) => {
-        if (process.env.MANTA_SHOW_DEBUG) console.error('[manta-show:debug] view.write 失败:', e?.message ?? e);
+        if (process.env.MANTA_SHOW_DEBUG) console.error('[manta-show:debug] view.write failed:', e?.message ?? e);
       });
   }
 
@@ -156,7 +179,22 @@ export class PtySession {
     const plain = stripAnsi(this.buffer);
     const all = plain.replace(/\r/g, '').split('\n');
     const tail = all.slice(-lines).join('\n');
-    return tail.replace(/\n{3,}/g, '\n\n').trim() || '(暂无输出)';
+    return tail.replace(/\n{3,}/g, '\n\n').trim() || t('terminal.noOutput');
+  }
+
+  /**
+   * Poll until the accumulated output contains `needle` (plain substring, ANSI stripped), or the
+   * deadline / process exit is reached. Lets the Agent block on a marker instead of polling
+   * terminal_read and racing half-finished output.
+   */
+  async waitText(needle: string, timeoutMs: number): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      if (stripAnsi(this.buffer).includes(needle)) return true;
+      if (this.exited) return false; // process is gone — no further output can arrive
+      if (Date.now() >= deadline) return false;
+      await new Promise((r) => setTimeout(r, 120));
+    }
   }
 }
 

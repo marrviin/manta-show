@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createServer } from '../src/server.js';
+import { locateFfmpeg } from '../src/deps/ffmpeg.js';
 import { outputDir } from '../src/util/media.js';
 
 type Content = { type: string; text?: string; data?: string };
@@ -62,13 +63,18 @@ function expectFile(file: string, minBytes: number, label: string): void {
   console.log(`    → ${label}: ${file} (${(stat.size / 1024).toFixed(0)} KB)`);
 }
 
+// The recording pipeline (Recorder → mp4 assembly) needs ffmpeg; recording steps are skipped
+// entirely when it's missing, and verification keys off the same probe instead of hard-requiring
+// the bundled ffmpeg platform package to have installed successfully
+const ffmpegBin = (await locateFfmpeg())?.path ?? null;
+
 /** Parse the mp4 duration via ffmpeg -i to verify the video is genuinely valid */
 async function expectVideo(file: string, minSec: number, label: string): Promise<void> {
-  const ffmpegPath = require('ffmpeg-static') as string;
+  if (!ffmpegBin) throw new Error('expectVideo 需要先定位到 ffmpeg（应由录制步骤的跳过逻辑保证）');
   const { execFileSync } = (await import('node:child_process')) as typeof import('node:child_process');
   let info = '';
   try {
-    info = execFileSync(ffmpegPath, ['-hide_banner', '-i', file], { stdio: 'pipe' }).toString();
+    info = execFileSync(ffmpegBin, ['-hide_banner', '-i', file], { stdio: 'pipe' }).toString();
   } catch (e) {
     info = (e as { stderr?: Buffer }).stderr?.toString() ?? '';
   }
@@ -97,40 +103,89 @@ console.log('\n== Web 线 ==');
     if (!text.includes('点我')) throw new Error('快照中未找到按钮文本');
   });
 
-  await step('browser_click + 交互生效', async () => {
-    await call('browser_click', { selector: '#demo-btn' });
+  await step('browser_click + 交互生效（text= 选择器语法）', async () => {
+    await call('browser_click', { selector: 'text=点我' });
     const text = (await call('browser_evaluate', { script: 'document.getElementById("text").textContent' }))
       .map((c) => c.text ?? '')
       .join('');
     if (!text.includes('按钮已被点击')) throw new Error(`点击未生效：${text}`);
   });
 
+  await step('browser_hover 悬停态生效', async () => {
+    await call('browser_hover', { selector: '#hover-card' });
+    // :hover styles apply on the frame after the mouse move — wait before asserting
+    await sleep(300);
+    const bg = (
+      await call('browser_evaluate', {
+        script: 'getComputedStyle(document.getElementById("hover-card")).backgroundColor',
+      })
+    )
+      .map((c) => c.text ?? '')
+      .join('');
+    if (!bg.includes('238, 242, 255')) throw new Error(`hover 样式未生效：${bg}`);
+  });
+
   await step('browser_screenshot（页面级）', async () => {
     const contents = await call('browser_screenshot', {});
     const image = contents.find((c) => c.type === 'image');
     if (!image?.data) throw new Error('返回体中没有图片内容');
-    const file = /已保存：(.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
+    const file = /Saved: (.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
     if (!file) throw new Error('返回体中没有保存路径');
     expectFile(file, 10_000, 'screenshot.png');
   });
 
   await step('browser_screenshot（元素级）', async () => {
-    const contents = await call('browser_screenshot', { selector: '.card' });
-    const file = /已保存：(.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
+    const contents = await call('browser_screenshot', { selector: '#card' });
+    const file = /Saved: (.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
     if (!file) throw new Error('返回体中没有保存路径');
     expectFile(file, 3_000, 'screenshot-element.png');
   });
 
-  await step('browser_record_start → record_stop 产出 mp4', async () => {
-    await call('browser_record_start', { sessionId: webId });
-    await sleep(1800);
-    const text = (await call('browser_record_stop', { sessionId: webId }))
-      .map((c) => c.text ?? '')
-      .join('\n');
-    const file = /视频已生成：(.+)/.exec(text)?.[1];
-    if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 200)}`);
-    await expectVideo(file, 1.2, 'web.mp4');
-  });
+  if (ffmpegBin) {
+    await step('browser_record_start → record_stop 产出 mp4', async () => {
+      await call('browser_record_start', { sessionId: webId });
+      await sleep(1800);
+      const text = (await call('browser_record_stop', { sessionId: webId }))
+        .map((c) => c.text ?? '')
+        .join('\n');
+      const file = /Video generated: (.+)/.exec(text)?.[1];
+      if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 200)}`);
+      await expectVideo(file, 1.2, 'web.mp4');
+    });
+
+    await step('browser_record_start 传 steps 批量动作自动出片', async () => {
+      const text = (
+        await call('browser_record_start', {
+          sessionId: webId,
+          steps: [
+            { type: 'click', selector: 'text=点我' },
+            { type: 'hover', selector: '#hover-card' },
+            { type: 'wait', ms: 600 },
+            { type: 'evaluate', script: '1+1' },
+          ],
+        })
+      )
+        .map((c) => c.text ?? '')
+        .join('\n');
+      const file = /Video generated: (.+)/.exec(text)?.[1];
+      if (!file) throw new Error(`批量模式未直接返回视频：${text.slice(0, 300)}`);
+      await expectVideo(file, 1.0, 'web-batch.mp4');
+    });
+
+    await step('批量动作失败时自动停录并返回已完成部分', async () => {
+      const res = (await client.callTool({
+        name: 'browser_record_start',
+        arguments: { sessionId: webId, steps: [{ type: 'click', selector: '#no-such-el' }] },
+      })) as { isError?: boolean; content: Content[] };
+      const text = res.content.map((c) => c.text ?? '').join('\n');
+      if (!res.isError) throw new Error('失败步骤应返回 isError');
+      const file = /Video generated: (.+)/.exec(text)?.[1];
+      if (!file) throw new Error(`失败时未导出已完成部分：${text.slice(0, 300)}`);
+      await expectVideo(file, 0.5, 'web-batch-partial.mp4');
+    });
+  } else {
+    console.log('  - 跳过 browser_record（未找到 ffmpeg，录制管线不可用）');
+  }
 
   await step('browser_close', async () => {
     await call('browser_close', { sessionId: webId });
@@ -151,8 +206,17 @@ console.log('\n== CLI 线 ==');
     );
   });
 
+  await step('terminal_wait 阻塞等待输出标记', async () => {
+    const text = (
+      await call('terminal_wait', { contains: 'BUILD PASSED', timeoutMs: 10_000, sessionId: cliId })
+    )
+      .map((c) => c.text ?? '')
+      .join('\n');
+    if (!text.includes('✓')) throw new Error(`wait 未命中：${text.slice(0, 200)}`);
+  });
+
   await step('terminal_read 看到输出', async () => {
-    await sleep(2200);
+    await sleep(800);
     const text = (await call('terminal_read', { lines: 20 })).map((c) => c.text ?? '').join('\n');
     if (!text.includes('BUILD PASSED')) throw new Error(`未读到预期输出：${text.slice(0, 200)}`);
     if (!text.includes('deploy step')) throw new Error('未读到进度输出');
@@ -165,25 +229,29 @@ console.log('\n== CLI 线 ==');
     await call('terminal_read', { lines: 5, sessionId: cliId });
   });
 
-  await step('terminal_record_stop 产出 mp4', async () => {
-    // Recording started automatically on open; open a fresh short-lived session here to record a complete take
-    const id2 = sessionIdOf(
-      await call('terminal_open', {
-        command: 'bash',
-        args: ['-c', 'echo -e "\\x1b[35mInstall deps...\\x1b[0m"; sleep 0.5; echo "\\x1b[32m✔ done\\x1b[0m"; sleep 3'],
-        cols: 80,
-        rows: 24,
-      }),
-    );
-    await sleep(1500);
-    const text = (await call('terminal_record_stop', { sessionId: id2 }))
-      .map((c) => c.text ?? '')
-      .join('\n');
-    const file = /视频已生成：(.+)/.exec(text)?.[1];
-    if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 200)}`);
-    await expectVideo(file, 1.0, 'terminal.mp4');
-    await call('terminal_close', { sessionId: id2 });
-  });
+  if (ffmpegBin) {
+    await step('terminal_record_stop 产出 mp4', async () => {
+      // Recording started automatically on open; open a fresh short-lived session here to record a complete take
+      const id2 = sessionIdOf(
+        await call('terminal_open', {
+          command: 'bash',
+          args: ['-c', 'echo -e "\\x1b[35mInstall deps...\\x1b[0m"; sleep 0.5; echo "\\x1b[32m✔ done\\x1b[0m"; sleep 3'],
+          cols: 80,
+          rows: 24,
+        }),
+      );
+      await sleep(1500);
+      const text = (await call('terminal_record_stop', { sessionId: id2 }))
+        .map((c) => c.text ?? '')
+        .join('\n');
+      const file = /Video generated: (.+)/.exec(text)?.[1];
+      if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 200)}`);
+      await expectVideo(file, 1.0, 'terminal.mp4');
+      await call('terminal_close', { sessionId: id2 });
+    });
+  } else {
+    console.log('  - 跳过 terminal_record（未找到 ffmpeg，录制管线不可用）');
+  }
 
   await step('terminal_stop + terminal_close', async () => {
     await call('terminal_stop', { sessionId: cliId });
@@ -213,21 +281,25 @@ console.log('\n== Electron 线 ==');
     await step('electron_click + 截图', async () => {
       await call('electron_click', { selector: '#btn', sessionId: electronId });
       const contents = await call('electron_screenshot', { sessionId: electronId });
-      const file = /已保存：(.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
+      const file = /Saved: (.+)/.exec(contents.map((c) => c.text ?? '').join('\n'))?.[1];
       if (!file) throw new Error('返回体中没有保存路径');
       expectFile(file, 5_000, 'electron.png');
     });
 
-    await step('electron_record_start → record_stop 产出 mp4', async () => {
-      await call('electron_record_start', { sessionId: electronId });
-      await sleep(1500);
-      const text = (await call('electron_record_stop', { sessionId: electronId }))
-        .map((c) => c.text ?? '')
-        .join('\n');
-      const file = /视频已生成：(.+)/.exec(text)?.[1];
-      if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 200)}`);
-      await expectVideo(file, 1.0, 'electron.mp4');
-    });
+    if (!ffmpegBin) {
+      console.log('  - 跳过 electron 录制（未找到 ffmpeg，录制管线不可用）');
+    } else {
+      await step('electron_record_start → record_stop 产出 mp4', async () => {
+        await call('electron_record_start', { sessionId: electronId });
+        await sleep(1500);
+        const text = (await call('electron_record_stop', { sessionId: electronId }))
+          .map((c) => c.text ?? '')
+          .join('\n');
+        const file = /Video generated: (.+)/.exec(text)?.[1];
+        if (!file) throw new Error(`返回体中没有视频路径：${text.slice(0, 200)}`);
+        await expectVideo(file, 1.0, 'electron.mp4');
+      });
+    }
 
     await step('electron_close', async () => {
       await call('electron_close', { sessionId: electronId });

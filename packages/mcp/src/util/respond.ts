@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { t } from '../i18n/index.js';
 import { relativeRef } from './media.js';
 
 export type TextContent = { type: 'text'; text: string };
@@ -29,8 +30,8 @@ function imageMime(file: string): string {
 export async function imageFileResult(file: string, extra?: string): Promise<ToolResult> {
   const data = (await readFile(file)).toString('base64');
   const text = [
-    `已保存：${file}`,
-    `markdown 引用：![screenshot](${relativeRef(file)})`,
+    t('respond.saved', { file }),
+    t('respond.markdownRef', { ref: relativeRef(file) }),
     extra,
   ]
     .filter(Boolean)
@@ -44,9 +45,10 @@ export async function imageFileResult(file: string, extra?: string): Promise<Too
  */
 export function videoFileResult(file: string, durationSec: number, frameCount: number): ToolResult {
   const text = [
-    `视频已生成：${file}`,
-    `时长：${durationSec.toFixed(1)}s，帧数：${frameCount}，格式：mp4 (H.264)`,
-    `markdown 引用：https://github.com/user-attachments/assets 需上传后使用；本地相对引用：\n![demo](${relativeRef(file)})`,
+    t('respond.videoGenerated', { file }),
+    t('respond.videoMeta', { duration: durationSec.toFixed(1), frames: frameCount }),
+    t('respond.videoLocalRef', { ref: relativeRef(file) }),
+    t('respond.videoGithubNote'),
   ].join('\n');
   return textResult(text);
 }

@@ -317,7 +317,7 @@ if (process.platform !== 'win32') {
                 fs.statSync(`/proc/${sub}/fd/${readFd}`);
                 done('not reachable');
               } catch (error) {
-                assert.notStrictEqual(error.message.indexOf('ENOENT'), -1);
+                assert.notStrictEqual((error as Error).message.indexOf('ENOENT'), -1);
               }
               setTimeout(() => {
                 process.kill(parseInt(sub), 'SIGINT');  // SIGINT to child

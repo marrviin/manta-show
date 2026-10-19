@@ -2,11 +2,15 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+// First import: applies ~/.manta-show/config.json env overrides before i18n resolves its locale
+import './util/envconfig.js';
+import { t } from './i18n/index.js';
 import { createServer } from './server.js';
 import { runInit } from './cli/init.js';
 import { runDoctor } from './cli/doctor.js';
 import { runClean } from './cli/clean.js';
 import { runRecordings } from './cli/recordings.js';
+import { runSet } from './cli/set.js';
 
 const args = process.argv.slice(2);
 
@@ -18,25 +22,7 @@ const showVersion = (): void => {
 };
 
 const showHelp = (): never => {
-  console.log(`manta-show - MCP server for AI agents: capture screenshots and videos of web pages, Electron apps and CLI tools.
-
-Usage: manta-show [options]
-
-Options:
-  -v, --version    Print version and exit
-  -h, --help       Show this help and exit
-  init             Detect installed AI agents (Claude Code, Cursor,
-                   Gemini CLI, Codex) and register the manta-show MCP server
-                   in their configs
-  doctor [--deep]  Check local environment (Node, ffmpeg, Chromium, output
-                   dir, MCP configs) and offer to fix issues interactively;
-                   --deep also runs a real capture test (screenshot + mp4)
-  recordings       List recent media artifacts in the output dir
-                   (--last for only the newest, --open to open it)
-  clean            Show output dir usage; delete with --older-than 7d
-                   (or 24h / 30m) or --all; add -y to skip confirmation
-
-Without options, starts the MCP server on stdio.`);
+  console.log(t('cliEntry.help'));
   process.exit(0);
 };
 
@@ -54,6 +40,7 @@ const commands: Record<string, (rest: string[]) => void | Promise<void>> = {
   '--doctor': (rest) => runDoctor(rest),
   clean: (rest) => runClean(rest),
   recordings: (rest) => runRecordings(rest),
+  set: (rest) => runSet(rest),
 };
 
 // A command consumes the rest of argv (its own flags); global flags like -v/-h stand alone
@@ -72,12 +59,27 @@ for (const arg of args) {
     process.exit(0);
   }
   if (arg.startsWith('-')) {
-    console.error(`[manta-show] 未知参数 "${arg}"，已忽略。用 --help 查看可用参数。`);
+    console.error(t('cliEntry.unknownArg', { arg }));
   }
 }
 
 const { server, store } = createServer();
 store.startReaper();
 
+// Host shutdown (MCP client restart / Ctrl+C): close sessions so pty and Chromium children don't
+// linger as orphans; force-exit if closing hangs.
+let closing = false;
+for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(sig, () => {
+    if (closing) {
+      process.exit(0);
+    }
+    closing = true;
+    const force = setTimeout(() => process.exit(0), 3_000);
+    force.unref?.();
+    void store.closeAll().finally(() => process.exit(0));
+  });
+}
+
 await server.connect(new StdioServerTransport());
-console.error('[manta-show] MCP server 已启动（stdio）');
+console.error(t('cliEntry.started'));

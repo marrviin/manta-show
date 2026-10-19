@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { t } from '../i18n/index.js';
 
 const LOGO = String.raw`
 ███╗   ███╗ █████╗███╗   ██╗████████╗ █████╗
@@ -25,5 +26,5 @@ export function printBanner(): void {
   const cyan = (s: string) => (colored ? `\x1b[36m${s}\x1b[0m` : s);
   const dim = (s: string) => (colored ? `\x1b[2m${s}\x1b[0m` : s);
   console.log(cyan(LOGO));
-  console.log(dim(`  manta-show v${version()} — capture toolkit for AI agents\n`));
+  console.log(dim(`  manta-show v${version()} — ${t('banner.tagline')}\n`));
 }
