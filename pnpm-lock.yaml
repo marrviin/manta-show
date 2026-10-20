@@ -45,6 +45,22 @@ importers:
       typescript:
         specifier: ^5.6.0
         version: 5.9.3
+    optionalDependencies:
+      '@manta-show/ffmpeg-darwin-arm64':
+        specifier: 6.1.1
+        version: 6.1.1
+      '@manta-show/ffmpeg-darwin-x64':
+        specifier: 6.1.1
+        version: 6.1.1
+      '@manta-show/ffmpeg-linux-arm64':
+        specifier: 6.1.1
+        version: 6.1.1
+      '@manta-show/ffmpeg-linux-x64':
+        specifier: 6.1.1
+        version: 6.1.1
+      '@manta-show/ffmpeg-win32-x64':
+        specifier: 6.1.1
+        version: 6.1.1
 
   packages/node-pty:
     dependencies:
@@ -290,6 +306,31 @@ packages:
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
+
+  '@manta-show/ffmpeg-darwin-arm64@6.1.1':
+    resolution: {integrity: sha512-gybenJobUcPKs4TJuGn89yiqnnV0bPvCFg/RZQ6Ta8f95FHqBbYoepdVlswa+KO5GR8kHcNMX2GPx6B7/pDaRA==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@manta-show/ffmpeg-darwin-x64@6.1.1':
+    resolution: {integrity: sha512-jACm/JUOncfIs2rBKR/0jJVoZj33Wp/u+swqURu7Z/Gpuj1XxiZRYYzSD5sC43i72Z4uKxd9axGaWL9vYxNojQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@manta-show/ffmpeg-linux-arm64@6.1.1':
+    resolution: {integrity: sha512-BZLBOvLZmYhKEgQB9/jLbBDrTo10s4KXGVSur6zV5p7af0yYno6mT4sbQXd0fC0CtRwFgnPDdcXGhx0Ct1XudQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@manta-show/ffmpeg-linux-x64@6.1.1':
+    resolution: {integrity: sha512-++s9Bkw9K3p7boxU0nQTKomozo0hoxnD7Vm/BWoqTAKoI6PLdd+6pvuQT50vh8cBtY3SgN7RE7CC2aSpmpD+Kg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@manta-show/ffmpeg-win32-x64@6.1.1':
+    resolution: {integrity: sha512-sgHiXHrBdQJ/TTm6VwIs7a6RZZx1J5Zmykymc6odK1JjAYX+IxdC1BAjRmo64Ii366IyUwT9J+B4yMr7wfvH5g==}
+    cpu: [x64]
+    os: [win32]
 
   '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.4':
     resolution: {integrity: sha512-7zkWub1txCUhlFE7z1k2mnv6TxCj5Bue2Sw3Iws2z14x16C32IN/KcgKjvdNTHU3o5EpbFaVrJmET/6se3jvtQ==}
@@ -2098,6 +2139,21 @@ snapshots:
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
       minipass: 7.1.3
+
+  '@manta-show/ffmpeg-darwin-arm64@6.1.1':
+    optional: true
+
+  '@manta-show/ffmpeg-darwin-x64@6.1.1':
+    optional: true
+
+  '@manta-show/ffmpeg-linux-arm64@6.1.1':
+    optional: true
+
+  '@manta-show/ffmpeg-linux-x64@6.1.1':
+    optional: true
+
+  '@manta-show/ffmpeg-win32-x64@6.1.1':
+    optional: true
 
   '@manta-show/node-pty-darwin-arm64@1.1.0-beta34.4':
     optional: true

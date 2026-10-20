@@ -249,8 +249,8 @@ export const zhCN: Dictionary = {
     '  -v, --version    打印版本并退出\n' +
     '  -h, --help       显示本帮助并退出\n' +
     '  init             检测已安装的 AI Agent（Claude Code、Cursor、\n' +
-    '                   Gemini CLI、Codex）并把 manta-show MCP server 写入\n' +
-    '                   它们的配置\n' +
+    '                   Gemini CLI、Codex、JoyCode）并把 manta-show MCP\n' +
+    '                   server 写入它们的配置\n' +
     '  doctor [--deep]  检查本地环境（Node、ffmpeg、Chromium、输出目录、MCP\n' +
     '                   配置）并交互式修复问题；--deep 额外做一次真实采集\n' +
     '                   实测（截图 + mp4）\n' +
@@ -298,6 +298,12 @@ export const zhCN: Dictionary = {
   'doctor.mcp.configured': '已配置：{names}',
   'doctor.mcp.noneConfigured': '尚无已配置的 Agent',
   'doctor.mcp.missing': '；未配置：{names}',
+  'doctor.mcp.mismatch': '；配置与标准不一致：{names}',
+  'doctor.mcp.broken': '；配置文件无法解析：{names}',
+  'doctor.mcp.staleHint': '{agent}：已记录命令 = {actual}，标准 = {expected}',
+  'doctor.mcp.brokenHint': '{agent}：{path} 解析失败 —— 请手动修复该 JSON',
+  'doctor.mcp.repairDesc': '重写为标准 MCP 配置',
+  'doctor.mcp.fixDescBoth': '重写过期配置并补全缺失配置',
   'doctor.mcp.fixDesc': 'manta-show init（写入缺失的 MCP 配置）',
   'doctor.intro': '环境体检与自动修复',
   'doctor.intro.deep': '环境体检与自动修复（含采集管线实测）',
