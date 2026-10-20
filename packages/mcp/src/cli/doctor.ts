@@ -6,7 +6,14 @@ import { locateFfmpeg } from '../deps/ffmpeg.js';
 import { runFfmpeg } from '../pipeline/encode.js';
 import { getBrowser } from '../targets/browser.js';
 import { mediaPath, outputDir } from '../util/media.js';
-import { listAgentStatuses, runInit } from './init.js';
+import {
+  entriesMatch,
+  listAgentStatuses,
+  mcpCommand,
+  repairMcpConfigs,
+  runInit,
+  type McpEntry,
+} from './init.js';
 import {
   checkChromium,
   checkContainer,
@@ -55,20 +62,69 @@ function checkMcp(): CheckReport {
       summary: t('doctor.mcp.none'),
     };
   }
-  const configured = detected.filter((s) => s.configured).map((s) => s.name);
-  const missing = detected.filter((s) => !s.configured).map((s) => s.name);
+
+  const standard = mcpCommand();
+  // In source-run mode (no dist) the standard is a PATH fallback; rewriting to it could break a
+  // working config, so mismatches are reported but not counted as fixable issues
+  const comparable = standard.real;
+  const okAgents = detected.filter(
+    (s) => s.entryState.state === 'ok' && (!comparable || entriesMatch(s.entry!, standard)),
+  );
+  const stale = comparable
+    ? detected.filter((s) => s.entryState.state === 'ok' && !entriesMatch(s.entry!, standard))
+    : [];
+  const malformed = detected.filter((s) => s.entryState.state === 'malformed');
+  const missing = detected.filter((s) => s.entryState.state === 'missing');
+  const parseFailed = detected.filter((s) => s.entryState.state === 'parse-error');
+
+  const fmtCmd = (entry: McpEntry) =>
+    [entry.command.replace(homedir(), '~'), ...entry.args.map((a) => a.replace(homedir(), '~'))].join(' ');
+
+  const hintParts: string[] = [
+    ...stale.map((s) =>
+      t('doctor.mcp.staleHint', {
+        agent: s.name,
+        actual: fmtCmd(s.entry!),
+        expected: fmtCmd({ command: standard.command, args: standard.args }),
+      }),
+    ),
+    ...parseFailed.map((s) => t('doctor.mcp.brokenHint', { agent: s.name, path: s.configPath })),
+  ];
+  const hint = hintParts.length ? hintParts.join('; ') : undefined;
+
+  const summaryParts: string[] = [];
+  if (okAgents.length) {
+    summaryParts.push(t('doctor.mcp.configured', { names: okAgents.map((s) => s.name).join(', ') }));
+  } else {
+    summaryParts.push(t('doctor.mcp.noneConfigured'));
+  }
+  if (stale.length) summaryParts.push(t('doctor.mcp.mismatch', { names: stale.map((s) => s.name).join(', ') }));
+  if (malformed.length) summaryParts.push(t('doctor.mcp.mismatch', { names: malformed.map((s) => s.name).join(', ') }));
+  if (missing.length) summaryParts.push(t('doctor.mcp.missing', { names: missing.map((s) => s.name).join(', ') }));
+  if (parseFailed.length) summaryParts.push(t('doctor.mcp.broken', { names: parseFailed.map((s) => s.name).join(', ') }));
+
+  const brokenFixable = stale.length + malformed.length > 0;
+  const missingFixable = missing.length > 0;
   return {
     group: t('doctor.group.output'),
     name: t('doctor.name.mcpConfig'),
-    ok: missing.length === 0,
-    summary:
-      (configured.length ? t('doctor.mcp.configured', { names: configured.join(', ') }) : t('doctor.mcp.noneConfigured')) +
-      (missing.length ? t('doctor.mcp.missing', { names: missing.join(', ') }) : ''),
+    ok: okAgents.length === detected.length,
+    summary: summaryParts.join(''),
+    hint,
     fix:
-      missing.length > 0
+      brokenFixable || missingFixable
         ? {
-            desc: t('doctor.mcp.fixDesc'),
-            run: () => runInit(),
+            desc:
+              brokenFixable && missingFixable
+                ? t('doctor.mcp.fixDescBoth')
+                : brokenFixable
+                  ? t('doctor.mcp.repairDesc')
+                  : t('doctor.mcp.fixDesc'),
+            run: async () => {
+              const current = listAgentStatuses().filter((s) => s.detected);
+              if (brokenFixable) await repairMcpConfigs(current);
+              if (missingFixable) await runInit();
+            },
           }
         : undefined,
   };

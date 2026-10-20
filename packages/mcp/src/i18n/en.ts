@@ -278,8 +278,8 @@ export const en = {
     '  -v, --version    Print version and exit\n' +
     '  -h, --help       Show this help and exit\n' +
     '  init             Detect installed AI agents (Claude Code, Cursor,\n' +
-    '                   Gemini CLI, Codex) and register the manta-show MCP server\n' +
-    '                   in their configs\n' +
+    '                   Gemini CLI, Codex, JoyCode) and register the manta-show\n' +
+    '                   MCP server in their configs\n' +
     '  doctor [--deep]  Check local environment (Node, ffmpeg, Chromium, output\n' +
     '                   dir, MCP configs) and offer to fix issues interactively;\n' +
     '                   --deep also runs a real capture test (screenshot + mp4)\n' +
@@ -327,6 +327,12 @@ export const en = {
   'doctor.mcp.configured': 'Configured: {names}',
   'doctor.mcp.noneConfigured': 'No agent configured yet',
   'doctor.mcp.missing': '; Not configured: {names}',
+  'doctor.mcp.mismatch': '; Stale configuration: {names}',
+  'doctor.mcp.broken': '; Unreadable config file: {names}',
+  'doctor.mcp.staleHint': '{agent}: recorded command = {actual}, standard = {expected}',
+  'doctor.mcp.brokenHint': '{agent}: config file at {path} failed to parse — fix the JSON manually',
+  'doctor.mcp.repairDesc': 'rewrite the stale MCP configs to the standard command',
+  'doctor.mcp.fixDescBoth': 'rewrite stale MCP configs and write the missing ones',
   'doctor.mcp.fixDesc': 'manta-show init (writes the missing MCP configs)',
   'doctor.intro': 'Environment check & auto-repair',
   'doctor.intro.deep': 'Environment check & auto-repair (with live capture pipeline test)',
