@@ -4,3 +4,15 @@ manta-media/
 *.log
 .scratch*
 .DS_Store
+
+# local env & tool caches
+.env
+.env.*
+*.tsbuildinfo
+coverage/
+
+# Claude Code local state
+.claude/
+
+# OS artifacts (Windows)
+Thumbs.db
