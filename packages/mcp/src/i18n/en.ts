@@ -181,7 +181,8 @@ export const en = {
     'or an installed macOS .app bundle (e.g. /Applications/SomeApp.app, automating the packaged build).',
   'electron.launch.fail':
     'Failed to launch the Electron app: {message}. ' +
-    'Source apps need electron dependencies installed; packaged apps that reject debug args (hardened signing / single-instance lock) cannot be automated.',
+    'Source apps need the electron package installed in the app project (e.g. `npm install -D electron` in the app directory); ' +
+    'packaged apps that reject debug args (hardened signing / single-instance lock) cannot be automated.',
   'electron.launch.result':
     'Launched and captured the main window (title: {title}). sessionId={id}\n' +
     'Next: electron_snapshot / electron_click / electron_type / electron_screenshot / electron_record_start.',

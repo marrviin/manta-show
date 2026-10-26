@@ -161,7 +161,8 @@ export const zhCN: Dictionary = {
     '或已安装的 macOS .app 包（如 /Applications/SomeApp.app，直接自动化打包产物）。',
   'electron.launch.fail':
     '启动 Electron 应用失败：{message}。' +
-    '源码应用需已安装 electron 依赖；打包 app 若拒绝调试参数（签名加固/单实例锁）则无法自动化。',
+    '源码应用需在其工程内安装 electron 依赖（在应用目录执行 `npm install -D electron`）；' +
+    '打包 app 若拒绝调试参数（签名加固/单实例锁）则无法自动化。',
   'electron.launch.result':
     '已启动并捕获主窗口（标题：{title}）。sessionId={id}\n' +
     '可用：electron_snapshot / electron_click / electron_type / electron_screenshot / electron_record_start。',

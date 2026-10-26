@@ -5,6 +5,7 @@ import { SessionStore } from '../session.js';
 import {
   ElectronSession,
   resolveInstalledAppBundle,
+  resolveSourceAppElectron,
 } from '../targets/electron.js';
 import {
   errorResult,
@@ -62,13 +63,19 @@ export function registerElectronTools(server: McpServer, store: SessionStore): v
     },
     handle(async ({ app, args, cwd }) => {
       const { _electron } = await import('playwright');
-      const executablePath = resolveInstalledAppBundle(app);
+      // Installed .app bundle → its internal Electron executable; source app → its own electron
+      // (or this package's, as a dev fallback). Left undefined only when neither exists, letting
+      // playwright produce its "install electron" error, wrapped below with actionable hints.
+      const bundleBin = resolveInstalledAppBundle(app);
+      const sourceBin = bundleBin ? undefined : resolveSourceAppElectron(app, cwd);
       let electronApp;
       try {
         electronApp = await _electron.launch({
-          ...(executablePath
-            ? { executablePath, args: args ?? [] }
-            : { args: [app, ...(args ?? [])] }),
+          ...(bundleBin
+            ? { executablePath: bundleBin, args: args ?? [] }
+            : sourceBin
+              ? { executablePath: sourceBin, args: [app, ...(args ?? [])] }
+              : { args: [app, ...(args ?? [])] }),
           cwd,
           // Hosts like VS Code inject ELECTRON_RUN_AS_NODE, which makes Electron start in pure Node mode and fail
           env: (() => {
