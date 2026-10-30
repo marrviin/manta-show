@@ -185,6 +185,20 @@ pnpm build</pre>
       </ul>
     </section>
 
+    <section class="doc-section" id="media">
+      <h2 data-i18n="d.media.h">媒体剪辑</h2>
+      <p data-i18n="d.media.p">无需采集会话,直接操作文件路径——录制产物或任意音视频,后处理统一走托管的 ffmpeg。</p>
+      <table>
+        <tr><th data-i18n="d.browser.th1">工具</th><th data-i18n="d.browser.th2">说明</th></tr>
+        <tr><td>audio_split</td><td data-i18n="d.media.t1">按时间点(秒)把音频(或视频音轨)拆成多段,每段输出一个 m4a</td></tr>
+        <tr><td>audio_concat</td><td data-i18n="d.media.t2">按顺序拼接多段音频,采样率 / 声道自动归一化</td></tr>
+        <tr><td>video_mute</td><td data-i18n="d.media.t3">去掉视频原声,画面无损拷贝</td></tr>
+        <tr><td>video_concat</td><td data-i18n="d.media.t4">拼接多段视频,统一归一化到第一段分辨率、30fps;transition='fade' 可做相邻片段叠化转场,fadeInSec / fadeOutSec 做成片首尾渐显渐隐</td></tr>
+        <tr><td>video_loop</td><td data-i18n="d.media.t5">短片段从头循环填充到目标时长(如 3 秒动画 → 30 秒循环)</td></tr>
+        <tr><td>media_mux</td><td data-i18n="d.media.t6">用给定音频替换视频原声;音频短于视频补静音,长于视频在片尾截断</td></tr>
+      </table>
+    </section>
+
     <section class="doc-section" id="video">
       <h2 data-i18n="d.video.h">视频输出规格</h2>
       <p data-i18n="d.video.p">三类录制默认统一输出 <b>1920×1080(16:9)</b>:等比缩放后居中补边(浏览器白底、终端深色底)。</p>

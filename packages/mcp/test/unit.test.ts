@@ -308,3 +308,166 @@ test('containerSpawn builds docker run argv with mount, env and image', async ()
   assert.equal(bare.at(-2), 'node:22');
   assert.equal(bare.at(-1), 'bash');
 });
+
+// ---- media editing (pipeline/media.ts) ----
+
+import {
+  buildAudioConcatArgs,
+  buildAudioSplitArgs,
+  buildLoopArgs,
+  buildMuxArgs,
+  buildMuteArgs,
+  buildVideoConcatArgs,
+  concatOutputDuration,
+  parseMediaInfo,
+  splitBoundaries,
+  type ConcatOptions,
+} from '../src/pipeline/media.js';
+
+const FFMPEG_STDERR_AV = `
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/tmp/a.mp4':
+  Duration: 00:01:02.50, start: 0.000000, bitrate: 1234 kb/s
+    Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p, 1920x1080 [SAR 1:1 DAR 16:9], 1000 kb/s, 30 fps
+    Stream #0:1(und): Audio: aac (LC) (mp4a / 0x6D703461), 44100 Hz, stereo, fltp, 128 kb/s
+`;
+
+test('parseMediaInfo extracts duration, resolution and stream presence from the ffmpeg summary', () => {
+  const info = parseMediaInfo(FFMPEG_STDERR_AV)!;
+  assert.equal(info.durationSec, 62.5);
+  assert.equal(info.width, 1920);
+  assert.equal(info.height, 1080);
+  assert.equal(info.hasVideo, true);
+  assert.equal(info.hasAudio, true);
+});
+
+test('parseMediaInfo detects muted videos and rejects non-media output', () => {
+  const muted = parseMediaInfo(
+    "Duration: 00:00:03.00,\nStream #0:0: Video: h264, yuv420p, 1280x720, 30 fps\n",
+  )!;
+  assert.equal(muted.hasAudio, false);
+  assert.equal(muted.durationSec, 3);
+  assert.equal(parseMediaInfo('carriage return\nnothing useful'), null);
+});
+
+test('splitBoundaries turns sorted/de-duplicated points into full-coverage segments and validates range', () => {
+  assert.deepEqual(splitBoundaries([8.5, 3, 3], 10), [
+    { start: 0, end: 3 },
+    { start: 3, end: 8.5 },
+    { start: 8.5, end: 10 },
+  ]);
+  assert.throws(() => splitBoundaries([0], 10));
+  assert.throws(() => splitBoundaries([10], 10));
+  assert.throws(() => splitBoundaries([], 10));
+});
+
+function concatOpts(overrides: Partial<ConcatOptions> = {}): ConcatOptions {
+  return {
+    clips: [
+      { file: '/a.mp4', durationSec: 4, hasAudio: true },
+      { file: '/b.mp4', durationSec: 3, hasAudio: true },
+    ],
+    width: 1920,
+    height: 1080,
+    transition: 'cut',
+    transitionDurationSec: 0.5,
+    fadeInSec: 0,
+    fadeOutSec: 0,
+    ...overrides,
+  };
+}
+
+test('video_concat (cut) normalizes clips and concats video+audio', () => {
+  const args = buildVideoConcatArgs(concatOpts(), '/out.mp4');
+  const graph = args[args.indexOf('-filter_complex') + 1];
+  assert.match(graph, /scale=1920:1080:force_original_aspect_ratio=decrease/);
+  assert.match(graph, /concat=n=2:v=1:a=1\[vc\]\[ac\]/);
+  // concat pads are interleaved per segment: [v0][an0][v1][an1]
+  assert.match(graph, /\[v0\]\[an0\]\[v1\]\[an1\]concat/);
+  assert.ok(!graph.includes('xfade'));
+  assert.deepEqual(args.slice(args.indexOf('-map'), args.indexOf('-map') + 4), ['-map', '[vc]', '-map', '[ac]']);
+  assert.equal(args.at(-1), '/out.mp4');
+});
+
+test('video_concat (fade) chains xfade/acrossfade with correct offsets and shortens the output', () => {
+  const opts = concatOpts({ transition: 'fade' });
+  assert.equal(concatOutputDuration(opts), 6.5);
+  const graph = buildVideoConcatArgs(opts, '/out.mp4')[argsGraphIndex()];
+  assert.match(graph, /xfade=transition=fade:duration=0\.500:offset=3\.500/);
+  assert.match(graph, /acrossfade=d=0\.500/);
+  assert.ok(!graph.includes('concat:'));
+
+  function argsGraphIndex(): number {
+    const a = buildVideoConcatArgs(opts, '/out.mp4');
+    return a.indexOf('-filter_complex') + 1;
+  }
+});
+
+test('video_concat pads audio-less clips with generated silence so one graph handles mixed inputs', () => {
+  const opts = concatOpts({
+    clips: [
+      { file: '/a.mp4', durationSec: 4, hasAudio: true },
+      { file: '/muted.mp4', durationSec: 3, hasAudio: false },
+    ],
+  });
+  const args = buildVideoConcatArgs(opts, '/out.mp4');
+  assert.ok(args.includes('anullsrc=channel_layout=stereo:sample_rate=44100'));
+  const graph = args[args.indexOf('-filter_complex') + 1];
+  assert.match(graph, /\[0:a\]aformat/);
+  assert.match(graph, /\[2:a\]aformat/); // clip 1's audio comes from the appended silent input
+});
+
+test('video_concat fade-in/fade-out applies to video and audio at the program boundaries', () => {
+  const graph = buildVideoConcatArgs(concatOpts({ fadeInSec: 1, fadeOutSec: 0.5 }), '/out.mp4')[
+    argsIndexOfGraph()
+  ];
+  assert.match(graph, /fade=t=in:st=0:d=1\.000/);
+  assert.match(graph, /fade=t=out:st=6\.500:d=0\.500/); // 7s program, 0.5s fade-out
+  assert.match(graph, /afade=t=out:st=6\.500:d=0\.500/);
+
+  function argsIndexOfGraph(): number {
+    const a = buildVideoConcatArgs(concatOpts({ fadeInSec: 1, fadeOutSec: 0.5 }), '/out.mp4');
+    return a.indexOf('-filter_complex') + 1;
+  }
+});
+
+test('concatOutputDuration: cut adds up, fade overlaps by one transition per junction', () => {
+  const cut = concatOpts({ transition: 'cut' });
+  assert.equal(concatOutputDuration(cut), 7);
+  assert.equal(
+    concatOutputDuration(
+      concatOpts({
+        transition: 'fade',
+        clips: [
+          { file: '/a', durationSec: 2, hasAudio: false },
+          { file: '/b', durationSec: 2, hasAudio: false },
+          { file: '/c', durationSec: 2, hasAudio: false },
+        ],
+      }),
+    ),
+    5, // 6 - 2 * 0.5
+  );
+});
+
+test('audio/video single-op arg builders', () => {
+  assert.deepEqual(buildAudioSplitArgs('/in.mp3', { start: 1.5, end: 3.5 }, '/p1.m4a'), [
+    '-ss', '1.500', '-i', '/in.mp3', '-t', '2.000', '-vn', '-c:a', 'aac', '-b:a', '192k', '/p1.m4a',
+  ]);
+  const concatArgs = buildAudioConcatArgs(['/a.m4a', '/b.m4a'], '/out.m4a');
+  const concatGraph = concatArgs[concatArgs.indexOf('-filter_complex') + 1];
+  assert.equal(concatGraph, '[0:a]aformat=sample_rates=44100:channel_layouts=stereo[a0];[1:a]aformat=sample_rates=44100:channel_layouts=stereo[a1];[a0][a1]concat=n=2:v=0:a=1[a]');
+  assert.ok(!concatArgs.includes('-ar')); // input-side -ar is rejected by common demuxers; normalization lives in the graph
+  assert.deepEqual(buildMuteArgs('/in.mp4', '/out.mp4'), [
+    '-i', '/in.mp4', '-an', '-c:v', 'copy', '-movflags', '+faststart', '/out.mp4',
+  ]);
+  const loop = buildLoopArgs('/anim.mp4', false, 30, '/loop.mp4');
+  assert.deepEqual(loop.slice(0, 5), ['-stream_loop', '-1', '-i', '/anim.mp4', '-t']);
+  assert.ok(loop.includes('-an'));
+  const loopAudio = buildLoopArgs('/anim.mp4', true, 30, '/loop.mp4');
+  assert.ok(loopAudio.includes('-c:a'));
+  assert.ok(!loopAudio.includes('-an'));
+  assert.deepEqual(buildMuxArgs('/v.mp4', '/a.m4a', '/out.mp4'), [
+    '-i', '/v.mp4', '-i', '/a.m4a', '-map', '0:v:0', '-map', '1:a:0',
+    '-c:v', 'copy', '-af', 'apad', '-c:a', 'aac', '-b:a', '192k',
+    '-shortest', '-movflags', '+faststart', '/out.mp4',
+  ]);
+});

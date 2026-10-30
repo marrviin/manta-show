@@ -102,6 +102,42 @@ export const zhCN: Dictionary = {
   'label.page': '页面',
   'label.window': '窗口',
 
+  // ---- media editing tools（pipeline/media.ts + tools/media.ts）----
+  'field.mediaInput': '输入媒体文件路径（音频或视频；绝对路径，或相对 server 启动目录）',
+  'field.mediaInputs': '输入媒体文件路径列表（按此顺序拼接）',
+  'field.audioInput': '要合成进视频的音频文件路径',
+  'field.splitPoints': '拆分时间点（秒），如 [3, 8.5] → 得到 [0–3]、[3–8.5]、[8.5–结尾] 三段',
+  'field.targetDuration': '目标时长（秒）；输入会从头循环填充到目标时长',
+  'field.transition': 'cut=片段间硬切（默认）；fade=相邻片段间叠化转场',
+  'field.transitionDuration': '叠化时长（秒，默认 0.5）；每段素材必须长于该时长',
+  'field.fadeInSec': '成片开头从黑场/静音淡入的时长（秒，0 = 关闭）',
+  'field.fadeOutSec': '成片结尾淡出到黑场/静音的时长（秒，0 = 关闭）',
+  'media.audioSplit.title': '按时间点拆分音频',
+  'media.audioSplit.desc':
+    '在给定时间点把音频文件（或视频的音轨）拆成多段，每段输出一个 m4a 文件，例如把长旁白切成按步骤的素材。',
+  'media.audioConcat.title': '拼接音频片段',
+  'media.audioConcat.desc': '把多个音频文件按顺序拼成一段 m4a。采样率与声道布局自动归一化，不同来源的片段也能拼接。',
+  'media.videoMute.title': '视频去原声',
+  'media.videoMute.desc': '去掉视频的音轨，画面不重编码（快速、无损）。',
+  'media.videoConcat.title': '拼接多段视频',
+  'media.videoConcat.desc':
+    '把多个视频按顺序拼成一个 mp4。所有片段统一缩放/补边到第一段分辨率、30fps。支持相邻片段叠化转场，以及成片首尾的渐显/渐隐。',
+  'media.videoLoop.title': '片段循环填充时长',
+  'media.videoLoop.desc': '把一段短视频（含/不含声音）从头循环直到达到目标时长，例如把 3 秒动画变成 30 秒背景循环。',
+  'media.mux.title': '视频合成音频',
+  'media.mux.desc': '用给定音频替换视频的原声。画面直接拷贝无损；音频比视频短时以静音补齐，更长时在视频结尾截断。',
+  'err.media.fileMissing': '输入文件不存在：{file}',
+  'err.media.noInputs': '至少提供一个输入文件',
+  'err.media.noAudioTrack': '{file} 没有音频轨',
+  'err.media.noVideoTrack': '{file} 没有视频轨',
+  'err.media.probeFail': '读取媒体信息失败：{file}（{message}）',
+  'err.media.badPoints': '拆分点无效 [{points}]：必须不重复且严格落在文件时长内（{duration}s）',
+  'err.media.transitionTooLong': '每段素材都必须长于转场时长（{duration}s）',
+  'err.media.fadeTooLong': '渐隐时长（{fade}s）必须短于成片时长（{total}s）',
+  'media.split.result': '已把 {file} 拆成 {count} 段：',
+  'media.segment.line': '{n}. [{start}s – {end}s] {file}',
+  'media.generated': '已生成：{file}（时长 {duration}s）',
+
   // ---- web tools ----
   'web.selectorHint': '建议先调用 browser_snapshot 查看页面可访问性树，确认选择器后再试。',
   'web.emptySnapshot': '(页面为空)',
@@ -271,10 +307,11 @@ export const zhCN: Dictionary = {
 
   // ---- server instructions ----
   'server.instructions':
-    'manta-show：为产品文档捕获高画质媒体。三条能力线：\n' +
+    'manta-show：为产品文档捕获高画质媒体。四条能力线：\n' +
     '1. 网页：browser_open → browser_snapshot 确定选择器 → browser_click/type/hover 交互 → browser_screenshot（selector 可做组件级截图）/ browser_record_start+record_stop 录 mp4。\n' +
     '2. 命令行工具：terminal_open 启动并录制 → terminal_read 看输出 → terminal_send/terminal_send_key 交互（terminal_wait 可阻塞等待输出出现） → terminal_record_stop 导出 mp4。\n' +
     '3. Electron 应用：electron_launch → electron_snapshot/click/screenshot → electron_record_start/stop。\n' +
+    '4. 媒体剪辑（无需会话，直接操作文件路径——包括上面录制出的视频）：音频 audio_split / audio_concat；视频 video_mute（去原声）、video_concat（拼接+叠化转场+渐显渐隐）、video_loop（循环填充时长）、media_mux（视频配音频）。\n' +
     '选择器支持 Playwright 语法（text=、role= 等）。录制工具传 steps 可批量执行编排动作并自动出片；所有视频统一输出 mp4 (H.264)；截图直接以图片返回。\n' +
     '产物统一保存在 ~/.manta-show/media（web/terminal/electron 前缀区分来源）；会话闲置 10 分钟自动回收，录制默认带合成鼠标指针与窗框装饰。',
 

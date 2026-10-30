@@ -192,6 +192,15 @@
       'd.elec.dec.l1': "<code>'desktop'</code> (default) — overlays the macOS desktop: the window, with rounded corners and shadow, sits on a desktop wallpaper (no title bar). The wallpaper is taken from the official macOS 26 (Tahoe) wallpapers — an Apple copyrighted image, for internal demo use only",
       'd.elec.dec.l2': "<code>'none'</code> — raw frames",
 
+      'd.media.h': 'Media editing',
+      'd.media.p': 'No capture session needed — these tools operate on file paths (the recordings produced above, or any audio/video) and post-process through the same managed ffmpeg.',
+      'd.media.t1': 'Split an audio (or a video audio track) into segments at time points (seconds), one m4a per segment',
+      'd.media.t2': 'Join audio files in order; sample rates / channels normalized automatically',
+      'd.media.t3': 'Strip the audio track; the picture is copied losslessly',
+      'd.media.t4': "Join clips in order, normalized to the first clip's resolution at 30fps; transition='fade' crossfades adjacent clips, fadeInSec / fadeOutSec fade the result in/out",
+      'd.media.t5': 'Repeat a short clip from the start until it fills a target duration (e.g. 3s animation → 30s loop)',
+      'd.media.t6': "Replace a video's audio with a given track; short audio is padded with silence, long audio cut at the video's end",
+
       'd.video.h': 'Video output spec',
       'd.video.p': 'All three capture lanes output a unified <b>1920×1080 (16:9)</b> by default: scaled proportionally then letterboxed to center (white background for browser, dark for terminal).',
       'd.video.l1': 'Encoding is unified to <code>mp4 (H.264, yuv420p)</code>',
@@ -406,6 +415,15 @@
       'd.elec.dec.p': '<code>electron_record_stop</code> 的 <code>decorate</code> 参数:',
       'd.elec.dec.l1': "<code>'desktop'</code>(默认)—— 叠加 macOS 桌面装饰:窗口带圆角投影放在桌面壁纸上(无标题栏)。壁纸取自 macOS 26 (Tahoe) 官方壁纸,为 Apple 版权图像,仅供内部演示使用",
       'd.elec.dec.l2': "<code>'none'</code> —— 原始画面",
+
+      'd.media.h': '媒体剪辑',
+      'd.media.p': '无需采集会话,直接操作文件路径——上面录制的产物或任意音视频,后处理统一走托管的 ffmpeg。',
+      'd.media.t1': '按时间点(秒)把音频(或视频音轨)拆成多段,每段输出一个 m4a',
+      'd.media.t2': '按顺序拼接多段音频,采样率 / 声道自动归一化',
+      'd.media.t3': '去掉视频原声,画面无损拷贝',
+      'd.media.t4': "拼接多段视频,统一归一化到第一段分辨率、30fps;transition='fade' 相邻片段叠化转场,fadeInSec / fadeOutSec 做成片首尾渐显渐隐",
+      'd.media.t5': '短片段从头循环填充到目标时长(如 3 秒动画 → 30 秒循环)',
+      'd.media.t6': '用给定音频替换视频原声;音频短于视频补静音,长于视频在片尾截断',
 
       'd.video.h': '视频输出规格',
       'd.video.p': '三类录制默认统一输出 <b>1920×1080(16:9)</b>:等比缩放后居中补边(浏览器白底、终端深色底)。',

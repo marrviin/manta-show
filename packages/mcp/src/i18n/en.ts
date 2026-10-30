@@ -110,6 +110,47 @@ export const en = {
   'label.page': 'page',
   'label.window': 'window',
 
+  // ---- media editing tools (pipeline/media.ts + tools/media.ts) ----
+  'field.mediaInput': 'Path to the input media file (audio or video; absolute, or relative to the server working directory)',
+  'field.mediaInputs': 'Ordered list of input media file paths (joined in this order)',
+  'field.audioInput': 'Path to the audio file to combine into the video',
+  'field.splitPoints': 'Time points (seconds) to split at, e.g. [3, 8.5] → segments [0–3], [3–8.5], [8.5–end]',
+  'field.targetDuration': 'Target duration in seconds; the input repeats from the beginning until the target is filled',
+  'field.transition': 'cut=hard cut between clips (default); fade=crossfade (dissolve) between adjacent clips',
+  'field.transitionDuration': 'Crossfade duration in seconds (default 0.5); every clip must be longer than this',
+  'field.fadeInSec': 'Fade-in from black/silence at the start of the output, in seconds (0 = off)',
+  'field.fadeOutSec': 'Fade-out to black/silence at the end of the output, in seconds (0 = off)',
+  'media.audioSplit.title': 'Split audio at time points',
+  'media.audioSplit.desc':
+    'Split an audio file (or the audio track of a video) into segments at the given time points. Returns one m4a file per segment, e.g. to cut a long voice-over into per-step clips.',
+  'media.audioConcat.title': 'Join audio segments',
+  'media.audioConcat.desc':
+    'Concatenate multiple audio files in order into one m4a. Sample rates and channel layouts are normalized automatically, so segments from different sources can be joined.',
+  'media.videoMute.title': 'Remove audio from video',
+  'media.videoMute.desc': 'Strip the audio track from a video without re-encoding the picture (fast and lossless).',
+  'media.videoConcat.title': 'Join video clips',
+  'media.videoConcat.desc':
+    "Concatenate multiple videos in order into one mp4. Clips are normalized to the first clip's resolution at 30fps (letterboxed). " +
+    'Supports crossfade (dissolve) transitions between adjacent clips and fade-in/fade-out on the final result.',
+  'media.videoLoop.title': 'Repeat a clip to fill a duration',
+  'media.videoLoop.desc':
+    'Loop a short clip (with or without audio) from the beginning until it reaches the target duration, e.g. turn a 3s animation into a 30s background loop.',
+  'media.mux.title': 'Combine video with an audio track',
+  'media.mux.desc':
+    "Replace the video's audio with the given audio file. The picture is copied losslessly; audio shorter than the video is padded with silence, longer audio is cut at the video's end.",
+  'err.media.fileMissing': 'Input file not found: {file}',
+  'err.media.noInputs': 'Provide at least one input file',
+  'err.media.noAudioTrack': '{file} has no audio track',
+  'err.media.noVideoTrack': '{file} has no video track',
+  'err.media.probeFail': 'Cannot read media info from {file}: {message}',
+  'err.media.badPoints':
+    'Invalid split points [{points}]: they must be unique and strictly inside the file duration ({duration}s)',
+  'err.media.transitionTooLong': 'Every clip must be longer than the transition duration ({duration}s)',
+  'err.media.fadeTooLong': 'Fade-out ({fade}s) must be shorter than the output duration ({total}s)',
+  'media.split.result': 'Split {file} into {count} segments:',
+  'media.segment.line': '{n}. [{start}s – {end}s] {file}',
+  'media.generated': 'Generated: {file} (duration {duration}s)',
+
   // ---- web tools ----
   'web.selectorHint':
     'Try browser_snapshot first to view the page’s accessibility tree, confirm the selector, then retry.',
@@ -300,10 +341,11 @@ export const en = {
 
   // ---- server instructions ----
   'server.instructions':
-    'manta-show: capture high-quality media for product docs. Three capability lines:\n' +
+    'manta-show: capture high-quality media for product docs. Four capability lines:\n' +
     '1. Web: browser_open → browser_snapshot to find selectors → browser_click/type/hover to interact → browser_screenshot (selector for component shots) / browser_record_start+record_stop for mp4.\n' +
     '2. CLI tools: terminal_open to launch and record → terminal_read to watch output → terminal_send/terminal_send_key to interact (terminal_wait blocks until output appears) → terminal_record_stop to export mp4.\n' +
     '3. Electron apps: electron_launch → electron_snapshot/click/screenshot → electron_record_start/stop.\n' +
+    '4. Media editing (no session needed, operates on file paths — including the recordings produced above): audio_split / audio_concat for audio; video_mute (strip audio), video_concat (join clips, crossfade transition, fade in/out), video_loop (repeat a clip to fill a duration), media_mux (combine video with an audio track).\n' +
     'Selectors support Playwright syntax (text=, role=, etc.). Recording tools accept steps to run choreographed actions in batch and produce a video automatically; all videos are unified mp4 (H.264); screenshots are returned inline as images.\n' +
     'Artifacts live in ~/.manta-show/media (web/terminal/electron prefixes mark the source); sessions idle for 10 minutes are reclaimed; recordings include a synthetic cursor and window decoration by default.',
 

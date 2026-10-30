@@ -3,6 +3,27 @@
 All notable changes to `@manta-show/mcp` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions are the npm package versions.
 
+## [Unreleased]
+
+### Added
+
+- Media-editing tools (stateless, no capture session — they operate on file paths, including the
+  recordings produced by the capture lines; all post-processing runs through the same managed ffmpeg):
+  - `audio_split`: split an audio (or a video's audio track) into segments at time points (seconds).
+  - `audio_concat`: join multiple audio files in order; sample rates / channels normalized in the
+    filter graph.
+  - `video_mute`: strip the audio track, picture stream-copied losslessly.
+  - `video_concat`: join clips in order, normalized to the first clip's resolution at 30fps;
+    optional crossfade (`transition: 'fade'`, xfade + acrossfade) between adjacent clips and
+    fade-in/fade-out on the assembled program; audio-less clips are fed by generated silence so
+    mixed muted/unmuted inputs work in one graph.
+  - `video_loop`: repeat a clip from the start until it fills a target duration.
+  - `media_mux`: replace a video's audio with a given track (short audio padded with silence via
+    apad, long audio cut at the video's end; picture stream-copied).
+- Media info probing (`ffmpeg -i` summary parsing — ffmpeg-static ships no ffprobe) and the pure
+  ffmpeg argument builders live in `packages/mcp/src/pipeline/media.ts`, unit-tested without
+  spawning ffmpeg; server instructions now document the fourth capability line.
+
 ## [0.0.9] — 2026-10-21
 
 ### Added

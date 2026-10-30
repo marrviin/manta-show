@@ -5,6 +5,7 @@ import { SessionStore } from './session.js';
 import { registerWebTools } from './tools/web.js';
 import { registerCliTools } from './tools/cli.js';
 import { registerElectronTools } from './tools/electron.js';
+import { registerMediaTools } from './tools/media.js';
 
 /** Server identity mirrors the package version (index.ts reads the same file for -v) */
 const pkg = JSON.parse(
@@ -22,5 +23,6 @@ export function createServer(): { server: McpServer; store: SessionStore } {
   registerWebTools(server, store);
   registerCliTools(server, store);
   registerElectronTools(server, store);
+  registerMediaTools(server);
   return { server, store };
 }
