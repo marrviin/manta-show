@@ -150,6 +150,19 @@ manta-show doctor
 | `electron_record_start` / `electron_record_stop` | 录制 / 导出 mp4；start 传 `steps` 可批量执行动作并自动出片 |
 | `electron_close` | 关闭应用 |
 
+### 媒体剪辑（无需会话）
+
+无状态工具，直接操作文件路径——上面录制的产物或任意音视频。后处理统一走托管的 ffmpeg。
+
+| 工具 | 说明 |
+|---|---|
+| `audio_split` | 按时间点（秒）把音频（或视频音轨）拆成多段 |
+| `audio_concat` | 按顺序拼接多段音频（采样率 / 声道自动归一化） |
+| `video_mute` | 去掉视频原声，画面无损拷贝 |
+| `video_concat` | 按顺序拼接多段视频；可选叠化转场（`transition: 'fade'`）与成片首尾渐显/渐隐；片段统一归一化到第一段分辨率、30fps |
+| `video_loop` | 短片段从头循环填充到目标时长（如 3 秒动画 → 30 秒循环） |
+| `media_mux` | 用给定音频替换视频原声（音频短于视频补静音，长于视频在片尾截断） |
+
 ## 安全说明
 
 `browser_evaluate` 会在页面上下文执行任意 JS、`terminal_open` 会在本机启动任意进程——这是本工具的设计用途（本机开发 / 文档场景），请在信任的项目中使用。安全漏洞请通过 [SECURITY.md](SECURITY.md) 描述的渠道私密上报，不要开公开 issue。
@@ -198,7 +211,7 @@ npm 12 起默认屏蔽依赖的 install/postinstall 脚本，原生二进制不�
 | | `@manta-show/node-pty`（编译管线） | `@manta-show/ffmpeg-<platform>-<arch>`（再分发管线） |
 |---|---|---|
 | 源码 | fork 源码在仓库 `packages/node-pty/`（为 macOS 26 `posix_spawnp` 兼容固定在 `1.1.0-beta34`） | **无源码、不编译** |
-| 二进制来源 | CI 内 `node-gyp rebuild` 自行编译（5 组平台×架构矩阵） | 下载 [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static) 的预编译静态构建，gunzip 后直接再分发 |
+| 二进制来源 | CI 内 `node-gyp rebuild` 自行编译（5 组平台×架构矩阵 + 2 组 musl/Alpine 变体，包名带 `-musl` 后缀并在 manifest 声明 `libc`） | 下载 [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static) 的预编译静态构建，gunzip 后直接再分发 |
 | 打包脚本 | `packages/node-pty/scripts/pack-platform.js` | `scripts/pack-ffmpeg.js`（拷贝二进制 + 写 GPL 许可声明 + `npm pack`） |
 | 版本号 | 跟随 fork：`1.1.0-beta34.x`（fork 点 + 补丁序号） | 跟随上游 ffmpeg：`6.1.1`（与 manta-show 版本无关） |
 | npm tag | `beta` | `latest`（上游版本本身稳定） |

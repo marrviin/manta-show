@@ -5,6 +5,8 @@
  *
  * Prebuilt binaries ship in per-platform packages
  * (`@manta-show/node-pty-<platform>-<arch>`, declared as optionalDependencies).
+ * On Linux the libc family is part of the package name: glibc builds resolve
+ * `...-linux-<arch>`, musl (Alpine) builds resolve `...-linux-<arch>-musl`.
  * When one is installed it is used directly; otherwise the bindings compiled
  * from source in ../build/{Release,Debug} are loaded, preserving the
  * install-from-source fallback for platforms without a prebuilt package.
@@ -18,7 +20,31 @@ export interface NativeBinding {
   dir: string;
 }
 
-const PREBUILT_PACKAGE = `@manta-show/node-pty-${process.platform}-${process.arch}`;
+/**
+ * Package name of the prebuilt bindings for this runtime. Linux ships two libc
+ * families — glibc and musl (Alpine) — with mutually incompatible binaries, so
+ * the libc is disambiguated via process.report: musl builds report no
+ * glibcVersionRuntime. Without the report API (rare) the glibc name is kept.
+ */
+function prebuiltPackageName(): string {
+  if (process.platform === 'linux') {
+    try {
+      // Cast: bundled @types/node@12 types getReport() as string; the runtime
+      // shape is { header: { glibcVersionRuntime?: string }, ... }.
+      const report = (process.report?.getReport() as unknown) as
+        | { header?: { glibcVersionRuntime?: string } }
+        | undefined;
+      if (report && !report.header?.glibcVersionRuntime) {
+        return `@manta-show/node-pty-linux-${process.arch}-musl`;
+      }
+    } catch (e) {
+      // fall through to the glibc name
+    }
+  }
+  return `@manta-show/node-pty-${process.platform}-${process.arch}`;
+}
+
+const PREBUILT_PACKAGE = prebuiltPackageName();
 
 function loadPrebuilt(name: string): NativeBinding | undefined {
   let dir: string;

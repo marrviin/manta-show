@@ -88,6 +88,70 @@ jobs:
             fi
           fi
 
+  # Musl (Alpine) variants of the linux prebuilt binaries, compiled inside an
+  # Alpine container because glibc runners cannot link against musl. Package
+  # names carry a -musl suffix and declare libc: musl so glibc installers skip
+  # them. Same first-version OIDC bootstrap caveat as build-native.
+  build-native-musl:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, os: ubuntu-latest }
+          - { arch: arm64, os: ubuntu-22.04-arm }
+    name: build-native-musl (linux-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    container:
+      image: node:22-alpine
+    steps:
+      - name: Install build toolchain
+        # git for actions/checkout, build-base/python3 for node-gyp, file for the arch check
+        run: apk add --no-cache git build-base python3 file
+
+      - uses: actions/checkout@v4
+
+      - name: Upgrade npm (OIDC publish needs >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Build native bindings
+        working-directory: packages/node-pty
+        run: |
+          npm install --ignore-scripts --no-package-lock --no-save node-gyp@latest
+          npx node-gyp rebuild --arch=${{ matrix.arch }}
+
+      - name: Assemble platform package
+        working-directory: packages/node-pty
+        run: node scripts/pack-platform.js --out out --platform linux --arch ${{ matrix.arch }} --musl
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-pty-linux-${{ matrix.arch }}-musl
+          path: packages/node-pty/out/@manta-show/*/*.tgz
+          if-no-files-found: error
+
+      - name: Publish platform package
+        if: inputs.dry_run != true
+        working-directory: packages/node-pty/out/@manta-show/node-pty-linux-${{ matrix.arch }}-musl
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NAME=$(node -p "require('./package.json').name")
+          if npm view "${NAME}@${VERSION}" version >/dev/null 2>&1; then
+            echo "Already published: ${NAME}@${VERSION} — skipping"
+          elif ! out=$(npm publish --tag beta --access public 2>&1); then
+            # A version may be invisible to `npm view` while npm's post-publish
+            # scan holds it; re-publishing then fails with E409. Treat as done.
+            if echo "$out" | grep -qE 'E409|previously (published|staged)'; then
+              echo "Version exists but is not yet visible (post-publish scan) — treating as published"
+            else
+              echo "$out" >&2
+              exit 1
+            fi
+          fi
+
   # Repackage ffmpeg-static's static binaries as @manta-show/ffmpeg-<platform>-<arch>.
   # The platform packages carry no lifecycle scripts, so a plain `npm install`
   # of @manta-show/mcp keeps working where npm 12 blocks dependency install
@@ -195,9 +259,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     # Also gate on build-ffmpeg: the mcp package pins the ffmpeg platform
-    # packages in optionalDependencies, so publish them first.
-    needs: [publish-fork, build-ffmpeg]
-    if: ${{ !cancelled() && needs.publish-fork.result == 'success' && needs.build-ffmpeg.result == 'success' && inputs.dry_run != true }}
+    # packages in optionalDependencies, so publish them first. build-native-musl
+    # is in the gate so the fork's optionalDependencies are complete when mcp
+    # ships the new fork version.
+    needs: [publish-fork, build-ffmpeg, build-native-musl]
+    if: ${{ !cancelled() && needs.publish-fork.result == 'success' && needs.build-ffmpeg.result == 'success' && needs.build-native-musl.result == 'success' && inputs.dry_run != true }}
     steps:
       - uses: actions/checkout@v4
 

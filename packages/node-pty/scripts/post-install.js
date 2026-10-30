@@ -24,7 +24,26 @@ const CONPTY_SUPPORTED_ARCH = ['x64', 'arm64'];
 
 // When the prebuilt platform package is in use, build/Release is not ours to
 // maintain and the conpty copy below is already part of that package.
-const PREBUILT_PACKAGE = `@manta-show/node-pty-${process.platform}-${process.arch}`;
+// Linux ships two libc families — glibc and musl (Alpine) — with mutually
+// incompatible binaries, so the prebuilt package name carries the libc: musl
+// builds resolve @manta-show/node-pty-linux-<arch>-musl. Detected via
+// process.report (musl builds report no glibcVersionRuntime); without the
+// report API (rare) the glibc name is kept.
+function prebuiltPackageName() {
+  if (process.platform === 'linux') {
+    try {
+      const report = process.report && process.report.getReport();
+      if (report && !report.header.glibcVersionRuntime) {
+        return `@manta-show/node-pty-linux-${process.arch}-musl`;
+      }
+    } catch (e) {
+      // fall through to the glibc name
+    }
+  }
+  return `@manta-show/node-pty-${process.platform}-${process.arch}`;
+}
+
+const PREBUILT_PACKAGE = prebuiltPackageName();
 try {
   require.resolve(`${PREBUILT_PACKAGE}/package.json`);
   console.log(`\x1b[32m> Prebuilt bindings in use (${PREBUILT_PACKAGE}) — skipping build-folder maintenance\x1b[0m`);

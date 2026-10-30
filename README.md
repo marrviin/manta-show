@@ -148,6 +148,19 @@ Every take is a genuine first install; the host stays untouched. `image` pins a 
 | `electron_record_start` / `electron_record_stop` | Record / export mp4 (`steps` batch mode supported) |
 | `electron_close` | Close the app |
 
+### Media editing (no session needed)
+
+Stateless tools that operate on file paths — the recordings produced above, or any audio/video. All post-processing runs through the same managed ffmpeg.
+
+| Tool | Description |
+|---|---|
+| `audio_split` | Split an audio (or a video's audio track) into segments at time points (seconds) |
+| `audio_concat` | Join multiple audio files in order (sample rates / channels normalized) |
+| `video_mute` | Strip the audio track, picture copied losslessly |
+| `video_concat` | Join clips in order; optional crossfade (`transition: 'fade'`) between clips and fade-in/fade-out on the result; clips are normalized to the first clip's resolution at 30fps |
+| `video_loop` | Repeat a short clip from the start until it fills a target duration (e.g. 3s animation → 30s loop) |
+| `media_mux` | Replace a video's audio with a given track (short audio is padded with silence, long audio cut at video end) |
+
 ## Security
 
 `browser_evaluate` executes arbitrary JS in the page and `terminal_open` starts arbitrary local processes — that is the tool's purpose (local development / documentation). Use it in projects you trust. See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
@@ -192,7 +205,7 @@ From npm 12 on, dependency install/postinstall scripts are blocked by default, s
 | | `@manta-show/node-pty` (compile pipeline) | `@manta-show/ffmpeg-<platform>-<arch>` (redistribution pipeline) |
 |---|---|---|
 | Sources | fork sources in `packages/node-pty/` (pinned to `1.1.0-beta34` for the macOS 26 `posix_spawnp` issue) | **no sources, no compiling** |
-| Binary origin | `node-gyp rebuild` compiled in CI (5 platform×arch matrix) | prebuilt static builds from [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static), gunzipped and redistributed (sha256-pinned) |
+| Binary origin | `node-gyp rebuild` compiled in CI (5 platform×arch matrix + 2 musl/Alpine variants, `-musl` package suffix and `libc` manifest field) | prebuilt static builds from [ffmpeg-static](https://github.com/eugeneware/ffmpeg-static), gunzipped and redistributed (sha256-pinned) |
 | Packing script | `packages/node-pty/scripts/pack-platform.js` | `scripts/pack-ffmpeg.js` (copies binary + writes GPL license notice + `npm pack`) |
 | Versioning | follows the fork: `1.1.0-beta34.x` | follows upstream ffmpeg: `6.1.1` (independent of manta-show versions) |
 | npm tag | `beta` | `latest` |

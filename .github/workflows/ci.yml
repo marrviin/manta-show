@@ -35,3 +35,45 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
+
+  # Install smoke test: pack the current build and install it from the tarball
+  # in a clean directory, the way end users do. Exercises the full install
+  # chain on every OS — prebuilt node-pty binding resolution (including npm's
+  # default install-script blocking), the ffmpeg platform package, and the
+  # manta-show entrypoint — on Windows too, which has no other coverage.
+  install-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    name: install-smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Build and pack
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          npm pack packages/mcp
+
+      - name: Install packed tarball and smoke test
+        shell: bash
+        run: |
+          mkdir smoke && cd smoke
+          npm init -y
+          npm install ../manta-show-mcp-*.tgz
+          node -e "const {createRequire}=require('module');const req=createRequire(require.resolve('@manta-show/mcp/package.json'));const pty=req('node-pty');const win=process.platform==='win32';const p=win?pty.spawn('cmd.exe',['/c','echo','ok']):pty.spawn('/bin/echo',['ok']);let out='';p.onData(d=>out+=d);p.onExit(({exitCode})=>{if(exitCode!==0||!out.includes('ok')){console.error('PTY smoke failed, output:',out);process.exit(1)}console.log('SMOKE_PTY_OK')})"
+          node node_modules/@manta-show/mcp/dist/index.js --version

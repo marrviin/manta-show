@@ -3,10 +3,12 @@
 /**
  * Assembles a prebuilt platform package from a compiled build/Release.
  *
- * Usage: node scripts/pack-platform.js [--out <dir>] [--platform <p>] [--arch <a>]
- * Emits <out-dir>/@manta-show/node-pty-<platform>-<arch>/ ready for
+ * Usage: node scripts/pack-platform.js [--out <dir>] [--platform <p>] [--arch <a>] [--musl]
+ * Emits <out-dir>/@manta-show/node-pty-<platform>-<arch>[-musl]/ ready for
  * `npm publish`. Platform/arch come from the machine this runs on — build
  * (cross-)compile first, e.g. `node-gyp rebuild --arch=x64` on macOS.
+ * Pass --musl for Alpine builds: the package name gets a -musl suffix and the
+ * manifest declares libc: musl so installers skip it on glibc systems.
  */
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +26,13 @@ const flag = (name) => {
 const outDir = path.resolve(flag('--out') || path.join(pkgRoot, 'platform-out'));
 const platform = flag('--platform') || process.platform;
 const arch = flag('--arch') || process.arch;
-const name = `@manta-show/node-pty-${platform}-${arch}`;
+const musl = args.includes('--musl');
+if (musl && platform !== 'linux') {
+  console.error('--musl only applies to linux builds');
+  process.exit(1);
+}
+const libc = musl ? 'musl' : platform === 'linux' ? 'glibc' : undefined;
+const name = `@manta-show/node-pty-${platform}-${arch}${musl ? '-musl' : ''}`;
 
 const releaseDir = path.join(pkgRoot, 'build', 'Release');
 const entry = platform === 'win32' ? 'conpty.node' : 'pty.node';
@@ -79,6 +87,7 @@ const packageJson = {
   },
   os: [platform],
   cpu: [arch],
+  ...(libc ? { libc: [libc] } : {}),
   files: ['build/', 'LICENSE'],
   publishConfig: {
     registry: 'https://registry.npmjs.org/',
